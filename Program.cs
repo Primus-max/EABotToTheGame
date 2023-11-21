@@ -1,4 +1,7 @@
-﻿namespace EABotToTheGame
+﻿using EABotToTheGame.Buttons;
+using EABotToTheGame.Handlers;
+
+namespace EABotToTheGame
 {
     internal class Program
     {
@@ -11,6 +14,9 @@
                 .AddSingleton<ITelegramBotClient>(provider => new TelegramBotClient("6926422184:AAEHQycwfIUMT7gSAxx5OFoj2h1isJPG3Lk")) // Токен для бота
                 .AddSingleton<TelegramBotController>()
                 .AddSingleton<IBotMode, AutoMode>() // Выберите режим, который нужно использовать
+                .AddScoped<IInlineKeyboardProvider, DefaultInlineKeyboardProvider>() // Кнопки
+                .AddScoped<HandleCallbackQuery>() // Перехватчик сообщений с CallBackQuery
+                .AddScoped<HandleTextMessage>() // Перехватчик текстовых сообщений
 
                 .BuildServiceProvider();
 

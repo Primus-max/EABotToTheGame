@@ -1,4 +1,6 @@
-﻿namespace EABotToTheGame
+﻿using EABotToTheGame.Handlers;
+
+namespace EABotToTheGame
 {
     /// <summary>
     /// Базовый класс создающий бота и прослушивающий сообщения
@@ -6,10 +8,16 @@
     public class TelegramBotController
     {
         private readonly ITelegramBotClient _botClient;
-       
-        public TelegramBotController(ITelegramBotClient botClient)
+        private readonly IInlineKeyboardProvider _keyboardProvider;
+        private readonly HandleTextMessage _hadlerTexMessage;
+        private readonly HandleCallbackQuery _callbackQuery;
+
+        public TelegramBotController(ITelegramBotClient botClient, IInlineKeyboardProvider keyboardProvider, HandleTextMessage hadlerManager, HandleCallbackQuery callbackQuery)
         {
-            _botClient = botClient;            
+            _botClient = botClient;
+            _keyboardProvider = keyboardProvider;
+            _hadlerTexMessage = hadlerManager;
+            _callbackQuery = callbackQuery;
         }
 
 
@@ -47,14 +55,13 @@
         /// <returns></returns>
         private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
-            //string message = "Здарова, заебал";
-            //await botClient.SendTextMessageAsync("6533456892", message);
+           
             // Если пришло текстовое сообщение
             if (update.Message != null)
             {
                 try
                 {
-                   // Task.Run(() => _messageHandlerManager.HandleMessageAsync(botClient, update, cancellationToken));
+                    Task.Run(() => _hadlerTexMessage.ExecuteAsync(botClient, update, cancellationToken));
                 }
                 catch (Exception)
                 {

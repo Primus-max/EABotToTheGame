@@ -2,9 +2,12 @@
 {
     public class DefaultInlineKeyboardProvider : IInlineKeyboardProvider
     {
-        public InlineKeyboardMarkup GetInlineKeyboard(params InlineKeyboardButton[] buttons)
+        public InlineKeyboardMarkup GetButtonsInlineKeyboard()
         {
-            var inlineKeyboard = new InlineKeyboardMarkup(buttons.Select(button => new[] { button }).ToArray());
+            var button1 = InlineKeyboardButton.WithCallbackData("АвтоРежим", "Button1Callback");
+            var button2 = InlineKeyboardButton.WithCallbackData("РучнойРежим", "Button2Callback");
+
+            var inlineKeyboard = new InlineKeyboardMarkup(new[] { new[] { button1, button2 } });
             return inlineKeyboard;
         }
     }

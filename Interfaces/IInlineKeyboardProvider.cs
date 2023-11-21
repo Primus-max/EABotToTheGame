@@ -2,6 +2,6 @@
 {
     public interface IInlineKeyboardProvider
     {
-        InlineKeyboardMarkup GetInlineKeyboard(params InlineKeyboardButton[] buttons);
+        InlineKeyboardMarkup GetButtonsInlineKeyboard();
     }
 }

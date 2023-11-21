@@ -2,6 +2,6 @@
 {
     public interface IHadlerManager
     {
-        Task ExecuteAsync();
+        Task ExecuteAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken);
     }
 }
