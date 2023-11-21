@@ -1,6 +1,4 @@
-﻿
-
-namespace EABotToTheGame
+﻿namespace EABotToTheGame
 {
     internal class Program
     {
@@ -10,8 +8,10 @@ namespace EABotToTheGame
             // Создание контейнера DI и регистрация зависимостей
             var serviceProvider = new ServiceCollection()
                 .AddSingleton<IWebDriver>(provider => new ChromeDriver()) // Пример для Selenium WebDriver
-                .AddSingleton<ITelegramBotClient>(provider => new TelegramBotClient("")) // Токен для бота
+                .AddSingleton<ITelegramBotClient>(provider => new TelegramBotClient("6926422184:AAEHQycwfIUMT7gSAxx5OFoj2h1isJPG3Lk")) // Токен для бота
+                .AddSingleton<TelegramBotController>()
                 .AddSingleton<IBotMode, AutoMode>() // Выберите режим, который нужно использовать
+
                 .BuildServiceProvider();
 
             // Создание главного класса и вызов начального метода

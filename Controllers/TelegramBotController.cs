@@ -1,4 +1,4 @@
-﻿namespace SexoPolisBot.Controllers
+﻿namespace EABotToTheGame
 {
     /// <summary>
     /// Базовый класс создающий бота и прослушивающий сообщения
@@ -46,21 +46,9 @@
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
-        {           
-            // Если информация пришла из канала где бот администратор
-            if (update.ChannelPost != null || update.Type == UpdateType.ChatJoinRequest)
-            {
-                try
-                {
-                   // Task.Run(() => _channelPostHandlerManager.HandleChannelPostAsync(botClient, update, cancellationToken));
-                }
-                catch (Exception)
-                {
-
-                    throw;
-                }
-            }
-
+        {
+            //string message = "Здарова, заебал";
+            //await botClient.SendTextMessageAsync("6533456892", message);
             // Если пришло текстовое сообщение
             if (update.Message != null)
             {

@@ -1,11 +1,12 @@
-﻿global using EABotToTheGame.Intergaces;
+﻿global using EABotToTheGame.Interfaces;
+global using EABotToTheGame.Intergaces;
 global using EABotToTheGame.Services;
 global using Microsoft.Extensions.DependencyInjection;
 global using OpenQA.Selenium;
 global using OpenQA.Selenium.Chrome;
-global using SexoPolisBot.Controllers;
 global using Telegram.Bot;
 global using Telegram.Bot.Exceptions;
 global using Telegram.Bot.Polling;
 global using Telegram.Bot.Types;
 global using Telegram.Bot.Types.Enums;
+global using Telegram.Bot.Types.ReplyMarkups;
