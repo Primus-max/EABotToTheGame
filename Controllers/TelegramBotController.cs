@@ -1,10 +1,4 @@
-﻿using Telegram.Bot;
-using Telegram.Bot.Exceptions;
-using Telegram.Bot.Polling;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
-
-namespace SexoPolisBot.Controllers
+﻿namespace SexoPolisBot.Controllers
 {
     /// <summary>
     /// Базовый класс создающий бота и прослушивающий сообщения
