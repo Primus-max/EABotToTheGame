@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34024.191
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EABotToTheGame", "EABotToTheGame.csproj", "{ED73CB75-5BA6-403B-B41A-4375F8D7266F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ED73CB75-5BA6-403B-B41A-4375F8D7266F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED73CB75-5BA6-403B-B41A-4375F8D7266F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED73CB75-5BA6-403B-B41A-4375F8D7266F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED73CB75-5BA6-403B-B41A-4375F8D7266F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {925C97BC-9211-4C2E-9C6A-86F0BBB9879A}
+	EndGlobalSection
+EndGlobal
