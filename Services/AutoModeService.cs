@@ -1,5 +1,4 @@
-﻿using EABotToTheGame.Managers;
-using EABotToTheGame.Models;
+﻿using EABotToTheGame.Services.SiteServices;
 
 namespace EABotToTheGame.Services
 {
@@ -10,14 +9,15 @@ namespace EABotToTheGame.Services
         private IWebDriver _driver = null!;
         private AuthData _authData;
         private TaskCompletionSource<string> _codeReceivedTaskCompletionSource = null!;
+        private TaskCompletionSource<AuthData> _authDataReceivedTaskCompletionSource = null!;
         private readonly UserStateManager _userStateManager;
         private string _copiedPathProfile = string.Empty;
-        private readonly TabManager _tabManager;
 
-        public AutoMode(AppModeManager appModeManager, UserStateManager userStateManager)
+        public AutoMode(UserStateManager userStateManager)
         {
             _codeReceivedTaskCompletionSource = new TaskCompletionSource<string>(); // Код для ожидания завершения задачи, в нашем случае ожидание кода от юзера
-            _userStateManager = userStateManager;                       
+            _authDataReceivedTaskCompletionSource = new TaskCompletionSource<AuthData>();
+            _userStateManager = userStateManager;
         }
 
         public async Task ExecuteAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, AuthData authData = null!)
@@ -25,30 +25,64 @@ namespace EABotToTheGame.Services
             if (botClient == null || update == null) return;
 
             _driver = InitializeDriver(); // Получаю драйвер
+            _authData = authData; // Полученные данные записываю глобально
 
             TabManager tabManager = new TabManager(_driver); // Создаю конструктор менеджера вкладок
 
             long userId = update.CallbackQuery.From.Id; // Id юзера
-            _authData = authData; // Объект с почтой и паролем
 
-            tabManager.OpenAndRememberTab(EASportUrl);
+            EASportSiteService eASportSiteService = new(_driver); // Сервис работы с EASports
+            tabManager.OpenOrSwitchTab(EASportUrl);// Переключаюсь на EASports
+
+            if (_authData != null)
+            {
+                bool isAuth = eASportSiteService.Authorizations(_authData.Email, _authData.Password); // Авторизуюсь
+
+                // Если не авторизовался, отрпавляю сообщение и ставлю ожидание на новые данные
+                if (!isAuth)
+                {
+                    string wrongAuthMessage = $"Проблема с авторизацией: Your credentials are incorrect or have expired. Please try again or...";
+                    await botClient.SendTextMessageAsync(userId, wrongAuthMessage);
+
+                    _userStateManager.SetUserState(userId, UserState.ExpectedEmailAuthorizationsData); // Устанавливаю состояние ожидания кода авторизации
+
+                    _authData = await _authDataReceivedTaskCompletionSource.Task; // Ставлю на ожидание новых регистрационных данных 
+                }
+                else // Если авторизовался запрашиваю код подтверждения
+                {
+                    bool isSendedCode = eASportSiteService.SendCodeOnEmail(); // Нажимаю кнопку отправить код на почту, на вский случай проверяю операцию
+
+                    // Повторить если не получилось нажать кнопку отправки кода
+                    if (!isSendedCode)
+                    {
+                        string cantSendCodeOnEmail = $"Что-то пошло не так, не удалось отправить код на почту, жмакни еще раз";
+                    }
+
+                    string codeAuthorization = await _codeReceivedTaskCompletionSource.Task; // Ожидаю код атворизации
+                    // Если получили код авторизации, продолжаем работу
+                    if (!string.IsNullOrEmpty(codeAuthorization)) 
+                    {
+                        eASportSiteService.SubmitCodeAuthorizations(codeAuthorization); // Отправляю код
+                    }
+                    
+                    // Тут дальше код для скриншота
+                    // Тут дальше код для отправки скриншота
+                }
+            }
 
 
-            tabManager.OpenAndRememberTab(BlazeTrackUrl);
+            tabManager.OpenOrSwitchTab(BlazeTrackUrl);
 
-            tabManager.OpenAndRememberTab(EASportUrl);
+            tabManager.OpenOrSwitchTab(EASportUrl);
 
 
-            tabManager.OpenAndRememberTab(BlazeTrackUrl);
+            tabManager.OpenOrSwitchTab(BlazeTrackUrl);
             // CloseBrowser();
             await WaitCodeAuthAsync(userId);
         }
 
         private async Task<string> WaitCodeAuthAsync(long userId)
         {
-            // Реализуйте вашу логику работы в этом методе
-            // ...
-
 
             // Установка статуса ожидания кода
             _userStateManager.SetUserState(userId, UserState.ExpectedCodeAuthorizations);
@@ -67,15 +101,16 @@ namespace EABotToTheGame.Services
             _codeReceivedTaskCompletionSource.TrySetResult(code);
         }
 
+        // Метод ожидания повторных данных (email, password)
+        public void CompleteAuthDataReceivedTask(AuthData authData)
+        {
+            _authDataReceivedTaskCompletionSource.TrySetResult(authData);
+        }
+
         // Получаю драйвер
         private IWebDriver InitializeDriver()
-        {
-           // string originalPathProfile = @"C:\Users\FedoTT\AppData\Local\Google\Chrome\User Data";
-
-            //ProfilePathManager profilePathManager = new();
-            //_copiedPathProfile = profilePathManager.CreateTempProfile(originalPathProfile);
-
-            WebDriverManager webDriverManager = new WebDriverManager();
+        {   
+            WebDriverManager webDriverManager = new();
             return webDriverManager.GetDriver();
         }
 
@@ -85,10 +120,6 @@ namespace EABotToTheGame.Services
             try
             {
                 _driver.Quit();
-
-                // Удаляю временный профиль
-                ProfilePathManager profilePathManager = new();
-                profilePathManager.DeleteDirectory(_copiedPathProfile);
             }
             catch (Exception)
             {

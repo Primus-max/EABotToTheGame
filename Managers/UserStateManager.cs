@@ -46,6 +46,7 @@
     public enum UserState
     {
         Start,
-        ExpectedCodeAuthorizations        
+        ExpectedCodeAuthorizations,
+        ExpectedEmailAuthorizationsData,
     }
 }

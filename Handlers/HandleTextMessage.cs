@@ -49,13 +49,18 @@ namespace EABotToTheGame.Handlers
                 switch (AppMode.AutoMode)
                 {
                     case AppMode.AutoMode:
-                        //_autoMode.CompleteCodeReceivedTask(codeAuth);
+                        _autoMode.CompleteCodeReceivedTask(codeAuth);
                         break;
                     case AppMode.ManualMode:
                         // Здесь код для ручного режима
 
                 }
 
+            }
+
+            if(userState == UserState.ExpectedEmailAuthorizationsData)
+            {
+                // Логика для получения новых данных и передачи обратно в код
             }
 
             if (currentMode == AppMode.AutoMode)

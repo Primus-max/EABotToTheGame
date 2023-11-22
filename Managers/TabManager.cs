@@ -21,7 +21,7 @@
         /// </summary>
         /// <param name="siteName"></param>
         /// <param name="url"></param>
-        public void OpenAndRememberTab(string url)
+        public void OpenOrSwitchTab(string url)
         {
             // Извлечение названия сайта из URL
             try
@@ -55,9 +55,6 @@
                 // Обработка ошибки
             }
         }
-
-
-
 
         /// <summary>
         /// Переключаюсь между вкладками
