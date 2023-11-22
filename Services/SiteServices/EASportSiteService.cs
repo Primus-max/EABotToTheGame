@@ -1,4 +1,5 @@
 ﻿using OpenQA.Selenium.Support.UI;
+using System.Xml.Linq;
 
 namespace EABotToTheGame.Services.SiteServices
 {
@@ -37,7 +38,10 @@ namespace EABotToTheGame.Services.SiteServices
             try
             {
                 IWebElement sendCodeButton = _wait.Until(e => e.FindElement(By.Id("btnSendCode")));
-                sendCodeButton.Click();
+
+                IJavaScriptExecutor executor = (IJavaScriptExecutor)_driver;
+                executor.ExecuteScript("arguments[0].click();", sendCodeButton);
+                //sendCodeButton.Click();
 
                 return true;
             }
@@ -51,10 +55,12 @@ namespace EABotToTheGame.Services.SiteServices
         /// Общий метод для проверки кода и авторизации
         /// </summary>
         /// <param name="code"></param>
-        public void SubmitCodeAuthorizations(string code)
+        public bool SubmitCodeAuthorizations(string code)
         {
             SetCodeToInput(code); // Вставляю код
             SubmitCode(); // Отправляю код
+
+            return IsInvalidSecurityCodeMessagePresent();
         }
 
         // Вставляю email  в поле
@@ -112,8 +118,8 @@ namespace EABotToTheGame.Services.SiteServices
             {
                 IWebElement setCodeInput = _wait.Until(e => e.FindElement(By.Id("twoFactorCode")));
                 setCodeInput.Clear();
-                Thread.Sleep(500);
-                setCodeInput.SendKeys(code);
+                Thread.Sleep(1000);
+                setCodeInput.SendKeys(code.Trim());
             }
             catch (Exception)
             {
@@ -135,21 +141,57 @@ namespace EABotToTheGame.Services.SiteServices
             }
         }
 
-        // Проверка успешной авторизации для получени кода подтверждения
-        private bool WrongAuth()
+        // Проверяю подошёл код или нет
+        private bool IsInvalidSecurityCodeMessagePresent()
         {
             try
             {
-                // Поиск элемента по тексту
-                IWebElement errorElement = _wait.Until(e => e.FindElement(By.XPath("//p[@class='otkinput-errormsg otkc' and contains(text(), 'Your credentials are incorrect or have expired.')]")));
+                // Найти элемент по тексту
+                IWebElement errorElement = _wait.Until(e => e.FindElement(By.XPath("//p[@class='otkc otkinput-errormsg' and contains(text(), 'The security code you entered is invalid')]")));
 
-                // Проверка наличия элемента
+                // Проверить наличие элемента
                 return errorElement != null;
             }
             catch (NoSuchElementException)
             {
-                // Если элемент не найден, возвращаем false
+                // Если элемент не найден, вернуть false
                 return false;
+            }
+        }
+
+
+        // Метод ожидания загрузки страницы после того как отправили код и авторизовались
+        public bool WaitingDownLoadPage()
+        {
+            WebDriverWait wait = new(_driver, TimeSpan.FromSeconds(240));
+            try
+            {
+                IWebElement navBarCurrency = wait.Until(e => e.FindElement(By.CssSelector("div.view-navbar-currency")));
+
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        // Проверка успешной авторизации для получени кода подтверждения
+        private bool WrongAuth()
+        {
+            WebDriverWait wait = new(_driver, TimeSpan.FromSeconds(5));
+            try
+            {
+                // Поиск элемента по тексту
+                IWebElement errorElement = wait.Until(e => e.FindElement(By.XPath("//p[@class='otkinput-errormsg otkc' and contains(text(), 'Your credentials are incorrect or have expired.')]")));
+
+                // Проверка наличия элемента
+                return false;
+            }
+            catch (Exception)
+            {
+                // Если элемент не найден, возвращаем false
+                return true;
             }
         }
 

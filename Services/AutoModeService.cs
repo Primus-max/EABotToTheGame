@@ -11,7 +11,6 @@ namespace EABotToTheGame.Services
         private TaskCompletionSource<string> _codeReceivedTaskCompletionSource = null!;
         private TaskCompletionSource<AuthData> _authDataReceivedTaskCompletionSource = null!;
         private readonly UserStateManager _userStateManager;
-        private string _copiedPathProfile = string.Empty;
 
         public AutoMode(UserStateManager userStateManager)
         {
@@ -25,7 +24,9 @@ namespace EABotToTheGame.Services
             if (botClient == null || update == null) return;
 
             _driver = InitializeDriver(); // Получаю драйвер
-            _authData = authData; // Полученные данные записываю глобально
+
+            AuthData auth = new() { Email = "sidorov.n.a92@gmail.com", Password = "EAsports41545!" };
+            _authData = auth; // Получаю данные с сайта
 
             TabManager tabManager = new TabManager(_driver); // Создаю конструктор менеджера вкладок
 
@@ -47,6 +48,8 @@ namespace EABotToTheGame.Services
                     _userStateManager.SetUserState(userId, UserState.ExpectedEmailAuthorizationsData); // Устанавливаю состояние ожидания кода авторизации
 
                     _authData = await _authDataReceivedTaskCompletionSource.Task; // Ставлю на ожидание новых регистрационных данных 
+
+                    // TODO код повторой отправки данных и всего процесса сначала
                 }
                 else // Если авторизовался запрашиваю код подтверждения
                 {
@@ -57,16 +60,45 @@ namespace EABotToTheGame.Services
                     {
                         string cantSendCodeOnEmail = $"Что-то пошло не так, не удалось отправить код на почту, жмакни еще раз";
                     }
-
-                    string codeAuthorization = await _codeReceivedTaskCompletionSource.Task; // Ожидаю код атворизации
-                    // Если получили код авторизации, продолжаем работу
-                    if (!string.IsNullOrEmpty(codeAuthorization)) 
+                    else
                     {
-                        eASportSiteService.SubmitCodeAuthorizations(codeAuthorization); // Отправляю код
+                        string succsessMessage = "Отправь мне код авторизации";
+                        await SendMessage(botClient, userId, cancellationToken, succsessMessage);
+                        // Устанавливаю статус ожидания сообщения
+                        _userStateManager.SetUserState(userId, UserState.ExpectedCodeAuthorizations);
+
+                        string codeAuthorization = await _codeReceivedTaskCompletionSource.Task; // Ожидаю код атворизации
+                                                                                                 // Если получили код авторизации, продолжаем работу
+                        if (!string.IsNullOrEmpty(codeAuthorization))
+                        {
+                            bool isCodeValide = eASportSiteService.SubmitCodeAuthorizations(codeAuthorization); // Отправляю код
+
+                            // TODO сделать уведопление если не валидный код
+                        }
                     }
-                    
-                    // Тут дальше код для скриншота
-                    // Тут дальше код для отправки скриншота
+
+
+                    bool isDownLoadedPage = eASportSiteService.WaitingDownLoadPage();
+
+                    // Если страница загрузилась, то отправляю правильный скрин в телегу и вставляю на сайт в поле
+                    if (isDownLoadedPage)
+                    {
+                        ScreenshotService screenshotService = new ScreenshotService(_driver);
+                        string screenPAth = screenshotService.CaptureAndCropScreenshot();
+
+                        // TODO код для вставки на сайте скриншота
+
+                        string succsessMessage = "Авторизация успешно пройдена, скриншот отправил";
+                        await SendMessage(botClient, userId, cancellationToken, succsessMessage, screenPAth);
+                    }
+                    else
+                    {
+                        // Если страница не загрузилась отправляю сообщение и скриншот страницы
+                        ScreenshotService screenshotService = new(_driver);
+                        string screenPAth = screenshotService.CaptureAndCropScreenshot(true); // Делаю полный скрин
+                        string wrongMessageText = $"Не удалось сделать скриншот, скорее всего страница не была загружена";
+                        await SendMessage(botClient, userId, cancellationToken, wrongMessageText, screenPAth);
+                    }
                 }
             }
 
@@ -109,7 +141,7 @@ namespace EABotToTheGame.Services
 
         // Получаю драйвер
         private IWebDriver InitializeDriver()
-        {   
+        {
             WebDriverManager webDriverManager = new();
             return webDriverManager.GetDriver();
         }
@@ -126,6 +158,24 @@ namespace EABotToTheGame.Services
 
                 throw;
             }
+        }
+
+        private async Task SendMessage(ITelegramBotClient botClient, long userId, CancellationToken cancellationToken, string messageText, string screenPath = null!)
+        {
+            // Если сообщение со скришотом
+            if (!string.IsNullOrEmpty(screenPath))
+            {
+                // Загружаю локальный файл
+                using var fileStream = new FileStream(screenPath, FileMode.Open, FileAccess.Read);
+                // Создаю объект InputFile, передавая ему файловый поток и имя файла
+                var inputFile = InputFile.FromStream(fileStream, Path.GetFileName(screenPath));
+
+                // Отправляю файл через метод SendPhotoAsync
+                var message = await botClient.SendPhotoAsync(userId, inputFile, caption: messageText);
+            }
+
+            // Если это обычное сообщение
+            await botClient.SendTextMessageAsync(userId, text: messageText);
         }
     }
 

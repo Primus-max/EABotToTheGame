@@ -18,15 +18,10 @@ public class ScreenshotService
     /// Делаю скриншот
     /// </summary>
     /// <returns></returns>
-    public string CaptureAndCropScreenshot()
+    public string CaptureAndCropScreenshot(bool fullScreenshot = false)
     {
         string outputDirectory = "screenshots"; // Имя директории
-        var fileName = $"screenshot_{DateTime.Now:yyyyMMdd_HHmmss}"; // Имя файлы
-
-        int x = 100;
-        int y = 100;
-        int width = 500;
-        int height = 500;
+        var fileName = $"screenshot_{DateTime.Now:yyyyMMdd_HHmmss}"; // Имя файла
 
         // Создаем директорию, если ее нет
         if (!Directory.Exists(outputDirectory))
@@ -34,27 +29,41 @@ public class ScreenshotService
             Directory.CreateDirectory(outputDirectory);
         }
 
-        // Создаем полный скриншот
+        // Создаем скриншот
         var screenshot = ((ITakesScreenshot)_driver).GetScreenshot();
 
-        // Сохраняем полный скриншот
-        var fullScreenshotPath = Path.Combine(outputDirectory, $"{fileName}_full.png");
-        screenshot.SaveAsFile(fullScreenshotPath, ScreenshotImageFormat.Png);
+        // Создаем имя файла и путь для сохранения
+        var screenshotPath = Path.Combine(outputDirectory, $"{fileName}_wrong.png");
 
-        // Загружаем полный скриншот и обрезаем его до нужной области
-        using (var image = new MagickImage(fullScreenshotPath))
+        if (fullScreenshot)
         {
-            image.Crop(new MagickGeometry(x, y, width, height));
+            // Если нужен полный скриншот, сохраняем его и возвращаем путь
+            screenshot.SaveAsFile(screenshotPath, ScreenshotImageFormat.Png);
+            return screenshotPath;
+        }
+        else
+        {
+            // Если нужен обрезанный скриншот, обрезаем и сохраняем
+            int x = 100;
+            int y = 100;
+            int width = 500;
+            int height = 500;
 
-            // Создаем имя для обрезанного скриншота
-            var croppedFileName = $"{fileName}.png";
+            using (var image = new MagickImage(screenshot.AsByteArray))
+            {
+                image.Crop(new MagickGeometry(x, y, width, height));
 
-            // Сохраняем обрезанный скриншот
-            var croppedScreenshotPath = Path.Combine(outputDirectory, croppedFileName);
-            image.Write(croppedScreenshotPath);
+                // Создаем имя для обрезанного скриншота
+                var croppedFileName = $"{fileName}.png";
 
-            return croppedScreenshotPath;
+                // Сохраняем обрезанный скриншот и возвращаем путь
+                var croppedScreenshotPath = Path.Combine(outputDirectory, croppedFileName);
+                image.Write(croppedScreenshotPath);
+
+                return croppedScreenshotPath;
+            }
         }
     }
+
 }
 
