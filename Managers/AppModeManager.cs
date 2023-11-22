@@ -9,22 +9,22 @@
             UserModes = new Dictionary<long, AppMode>();
         }
 
-        public AppMode GetCurrentMode(long userId)
+        public AppMode GetCurrentAppMode(long userId)
         {
             if (UserModes.TryGetValue(userId, out var mode))
             {
                 return mode;
             }
 
-            return GetDefaultUserMode();
+            return GetDefaultAppMode();
         }
 
-        public void SetUserMode(long userId, AppMode mode)
+        public void SetAppMode(long userId, AppMode mode)
         {
             UserModes[userId] = mode;
         }
 
-        private AppMode GetDefaultUserMode()
+        private AppMode GetDefaultAppMode()
         {
             return AppMode.AutoMode; // Мод по умолчанию
         }
@@ -33,7 +33,7 @@
     public enum AppMode
     {
         AutoMode,
-        ManualMode
+        ManualMode        
     }
 
 }

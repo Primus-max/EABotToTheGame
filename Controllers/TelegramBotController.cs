@@ -76,7 +76,7 @@ namespace EABotToTheGame
 
                 try
                 {
-                   // Task.Run(() => _callbackQueryHandler.HandleCallbackQueryAsync(botClient, update, cancellationToken));
+                    Task.Run(() => _callbackQuery.ExecuteAsync(botClient, update, cancellationToken));
                 }
                 catch (Exception)
                 {

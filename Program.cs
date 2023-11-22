@@ -13,11 +13,13 @@ namespace EABotToTheGame
                 .AddSingleton<IWebDriver>(provider => new ChromeDriver()) // Пример для Selenium WebDriver
                 .AddSingleton<ITelegramBotClient>(provider => new TelegramBotClient("6926422184:AAEHQycwfIUMT7gSAxx5OFoj2h1isJPG3Lk")) // Токен для бота
                 .AddSingleton<TelegramBotController>()
-                .AddSingleton<IBotMode, AutoMode>() // Выберите режим, который нужно использовать
+                .AddSingleton<AutoMode>() // Режим работы
+                .AddSingleton<ManualMode>() // Режим работы
                 .AddScoped<IInlineKeyboardProvider, DefaultInlineKeyboardProvider>() // Кнопки
                 .AddScoped<HandleCallbackQuery>() // Перехватчик сообщений с CallBackQuery
                 .AddScoped<HandleTextMessage>() // Перехватчик текстовых сообщений
-
+                .AddScoped<AppModeManager>() // Хранитель состояний для режима приложения
+                .AddScoped<UserStateManager>() // Хранитель состояний для юзеров
                 .BuildServiceProvider();
 
             // Создание главного класса и вызов начального метода

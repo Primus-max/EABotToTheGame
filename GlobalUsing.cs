@@ -1,5 +1,7 @@
 ﻿global using EABotToTheGame.Interfaces;
 global using EABotToTheGame.Intergaces;
+global using EABotToTheGame.Managers;
+global using EABotToTheGame.Models;
 global using EABotToTheGame.Services;
 global using Microsoft.Extensions.DependencyInjection;
 global using OpenQA.Selenium;
