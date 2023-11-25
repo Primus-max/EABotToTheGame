@@ -17,6 +17,7 @@
                 .AddScoped<AppModeManager>() // Хранитель состояний для режима приложения
                 .AddScoped<UserStateManager>() // Хранитель состояний для юзеров
                 .AddSingleton<BotStateMachine>() // Паттерн FSM хранитель состояний
+                .AddSingleton<WhoIAmManager>() // Хранитель ролей 
                 .AddTransient<InlineKeyboardProviderFactory>() // Фабрика панелей (кнопок)
                 .AddScoped<IInlineKeyboardProvider, СhoiceRoleModeInlineKeyboardProvider>() // Панель выбора роли юзера
                 .AddScoped<IInlineKeyboardProvider, СhoiceModeInlineKeyboardProvider>() // Панель выбора мода работы бота

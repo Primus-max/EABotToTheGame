@@ -1,23 +1,28 @@
-﻿using Telegram.Bot.Types;
-
-namespace EABotToTheGame.Managers
+﻿namespace EABotToTheGame.Managers
 {
     public class BotStateMachine
     {
-        
+
         private readonly ITelegramBotClient _botClient;
         private readonly IInlineKeyboardProvider _keyboardProvider;
         private readonly AutoMode _autoMode;
         private readonly ManualMode _manualMode;
         private readonly AppModeManager _appModeManager;
         private readonly InlineKeyboardProviderFactory _inlineKeyboardProviderFactory;
+        private readonly WhoIAmManager _whoIAmManager;
         private Dictionary<long, int> _lastMessageIds = new Dictionary<long, int>();
 
         // Свойства бота
         private BotState _currentState;
         private BotState _previousState;
         private BotState _nextState;
-        public BotStateMachine(ITelegramBotClient botClient, IInlineKeyboardProvider keyboardProvider, AutoMode autoMode, ManualMode manualMode, AppModeManager appModeManager, InlineKeyboardProviderFactory inlineKeyboardProviderFactory)
+        public BotStateMachine(ITelegramBotClient botClient,
+            IInlineKeyboardProvider keyboardProvider,
+            AutoMode autoMode,
+            ManualMode manualMode,
+            AppModeManager appModeManager,
+            InlineKeyboardProviderFactory inlineKeyboardProviderFactory,
+            WhoIAmManager whoIAmManager)
         {
             _botClient = botClient;
             _keyboardProvider = keyboardProvider;
@@ -27,6 +32,7 @@ namespace EABotToTheGame.Managers
             _currentState = BotState.StartScreenState;
             _previousState = BotState.StartScreenState; // Устанавливаем начальное предыдущее состояние
             _inlineKeyboardProviderFactory = inlineKeyboardProviderFactory;
+            _whoIAmManager = whoIAmManager;
         }
 
         public async Task ProcessUpdateAsync(Update update, CancellationToken cancellationToken)
@@ -63,8 +69,8 @@ namespace EABotToTheGame.Managers
                 _currentState = BotState.StartScreenState;
                 _nextState = BotState.ChoiceRole;
                 string message = "Выбери кем управлять";
-                await SendMessage(userId, message, _nextState, cancellationToken);  
-            }            
+                await SendMessage(userId, message, _nextState, cancellationToken);
+            }
         }
 
 
@@ -72,24 +78,30 @@ namespace EABotToTheGame.Managers
         {
             if (_currentState != BotState.ChoiceRole || update == null) return;
 
+            // Состояния для навигации
             _currentState = _nextState;
             _nextState = BotState.ChoiceModeState;
             _previousState = BotState.ChoiceRole;
+
+            if (!string.IsNullOrEmpty(update?.CallbackQuery?.Data) && Enum.TryParse<WhoIAm>(update.CallbackQuery.Data, out var role))
+                _whoIAmManager.WhiteWhoIAm(userId, role); // Устанавливаю текущую роль пользователя
+
+            // Отправляю сообщение
             string message = "Выбери режим работы бота";
             await SendMessage(userId, message, _nextState, cancellationToken);
         }
 
-        private async Task ProcessChoiceModeState(long userId, Update update, CancellationToken cancellationToken) 
+        private async Task ProcessChoiceModeState(long userId, Update update, CancellationToken cancellationToken)
         {
             // Логика для переходов между состояниями
-            if (update?.CallbackQuery?.Data == "autoMode")
+            if (update?.CallbackQuery?.Data == "AutoMode")
             {
                 _appModeManager.SetAppMode(userId, AppMode.AutoMode);
                 _previousState = _currentState; // Сохраняем текущее состояние
                 _currentState = BotState.AutoModeState;
                 await _autoMode.ExecuteAsync(_botClient, update, cancellationToken);
             }
-            else if (update?.CallbackQuery?.Data == "manualMode")
+            else if (update?.CallbackQuery?.Data == "ManualMode")
             {
                 _appModeManager.SetAppMode(userId, AppMode.ManualMode);
                 _previousState = _currentState; // Сохраняем текущее состояние
@@ -138,7 +150,7 @@ namespace EABotToTheGame.Managers
         }
 
         private async Task SendMessage(long userId, string message, BotState nextState, CancellationToken cancellationToken)
-        {            
+        {
             //if (_currentState != nextState)
             //    return;
 

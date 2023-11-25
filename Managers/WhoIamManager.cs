@@ -38,14 +38,14 @@
         {
             // Здесь можно асинхронно запросить состояние по умолчанию, например, из базы данных
             // и вернуть его
-            return WhoIAm.Customer; // Простой пример
+            return WhoIAm.IAmCustomer; // Простой пример
         }
     }
 
 
     public enum WhoIAm
     {
-        Customer, // Заказчик
-        Performer // Исполнитель
+        IAmCustomer, // Заказчик
+        IAmPerformer // Исполнитель
     }
 }
