@@ -1,4 +1,5 @@
 ﻿global using EABotToTheGame.Buttons;
+global using EABotToTheGame.Buttons.Factory;
 global using EABotToTheGame.Handlers;
 global using EABotToTheGame.Interfaces;
 global using EABotToTheGame.Intergaces;

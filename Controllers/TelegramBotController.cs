@@ -66,7 +66,6 @@ namespace EABotToTheGame
                 catch (Exception)
                 {
 
-                    throw;
                 }
             }
 
@@ -81,7 +80,6 @@ namespace EABotToTheGame
                 catch (Exception)
                 {
 
-                    throw;
                 }
 
 
