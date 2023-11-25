@@ -12,7 +12,7 @@
                 .AddSingleton<WebDriverManager>() // Открываю браузеры на портах и подключа к ним драйвера. Созданю один экземпляр который хранит список
                 .AddSingleton<AutoMode>() // Режим работы
                 .AddSingleton<ManualMode>() // Режим работы
-                .AddScoped<IInlineKeyboardProvider, DefaultInlineKeyboardProvider>() // Кнопки
+                .AddScoped<IInlineKeyboardProvider, СhoiceModeInlineKeyboardProvider>() // Кнопки
                 .AddScoped<HandleCallbackQuery>() // Перехватчик сообщений с CallBackQuery
                 .AddScoped<HandleTextMessage>() // Перехватчик текстовых сообщений
                 .AddScoped<AppModeManager>() // Хранитель состояний для режима приложения

@@ -1,6 +1,6 @@
 ﻿namespace EABotToTheGame.Buttons
 {
-    public class DefaultInlineKeyboardProvider : IInlineKeyboardProvider
+    public class СhoiceModeInlineKeyboardProvider : IInlineKeyboardProvider
     {
         public InlineKeyboardMarkup GetButtonsInlineKeyboard()
         {
