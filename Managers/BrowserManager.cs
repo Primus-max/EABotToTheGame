@@ -1,4 +1,5 @@
-﻿using System.Net.Sockets;
+﻿using Newtonsoft.Json;
+using System.Net.Sockets;
 
 namespace EABotToTheGame.Managers
 {
@@ -14,11 +15,24 @@ namespace EABotToTheGame.Managers
         // Запуск браузера
         public List<int> Launch()
         {
-            _browserPaths = BrowserPaths();
             List<int> lounchedPorts = new List<int>();
+
+
+            _browserPaths = BrowserPaths();
+            if (_browserPaths.Count == 0)
+            {
+                Console.WriteLine($"Не удалось получить пути для браузеров");
+                return lounchedPorts;
+            }
+
             foreach (string browserPath in _browserPaths)
             {
                 int openedPort = GetOpenedPort();
+                if (openedPort == 0)
+                {
+                    Console.WriteLine("Не найден не один доступный порт для открытия на нём браузера, проверь это");
+                    return lounchedPorts;
+                }
 
                 try
                 {
@@ -26,7 +40,7 @@ namespace EABotToTheGame.Managers
                     string chromeOptions = $"--remote-debugging-port={openedPort}";
 
                     // Создаем процесс для запуска Chrome
-                    ProcessStartInfo psi = new ProcessStartInfo
+                    ProcessStartInfo psi = new()
                     {
                         FileName = browserPath,
                         Arguments = chromeOptions,
@@ -47,7 +61,7 @@ namespace EABotToTheGame.Managers
                     Console.WriteLine($"Ошибка при запуске Chrome: {ex.Message}");
                 }
             }
-
+            return lounchedPorts;
         }
 
         // Проверяю запустился ли браузер
@@ -56,11 +70,25 @@ namespace EABotToTheGame.Managers
             return true;
         }
 
-        // Получаю пути из файла
         private List<string> BrowserPaths()
         {
+            string filePath = "config.json";
+
+            try
+            {
+                // Чтение содержимого файла
+                string jsonContent = System.IO.File.ReadAllText(filePath);
+
+                // Десериализация JSON в объект
+                var config = JsonConvert.DeserializeObject<Config>(jsonContent);
+
+                return config?.BrowserPaths;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading config file: {ex.Message}");
+            }
             return new List<string>();
-            // ЛОгика получения путей
         }
 
         // Поучаю свободный порт

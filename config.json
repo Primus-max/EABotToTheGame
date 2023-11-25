@@ -1,0 +1,8 @@
+{
+  "BrowserPaths": [
+    "C:\\Program Files\\Mozilla Firefox\\firefox.exe",
+    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe"
+  ],
+  "TelegramToken": "ваш_токен_телеграма"
+}
