@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System.Net;
 using System.Net.Sockets;
 
 namespace EABotToTheGame.Managers
@@ -51,7 +52,7 @@ namespace EABotToTheGame.Managers
                     Process.Start(psi);
                     Thread.Sleep(1000);
 
-                    if (IsBrowserLounch()) // Проверка запущен браузер или нет
+                    if (IsBrowserLaunched(openedPort)) // Проверка запущен браузер или нет
                     {
                         lounchedPorts.Add(openedPort);
                     }
@@ -65,9 +66,26 @@ namespace EABotToTheGame.Managers
         }
 
         // Проверяю запустился ли браузер
-        private bool IsBrowserLounch()
+        private bool IsBrowserLaunched(int port)
         {
-            return true;
+            try
+            {
+                // Создаем URL для проверки, например, "http://localhost:port/json"
+                string url = $"http://localhost:{port}/json";
+
+                // Создаем запрос и отправляем его
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                request.Timeout = 10000; // Устанавливаем таймаут запроса
+
+                using HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                // Если ответ получен, считаем, что браузер запущен успешно
+                return response.StatusCode == HttpStatusCode.OK;
+            }
+            catch (WebException)
+            {
+                // Если возникает исключение, то браузер не запущен
+                return false;
+            }
         }
 
         // Получаю пути браузеров
@@ -92,28 +110,26 @@ namespace EABotToTheGame.Managers
             return new List<string>();
         }
 
-        // Поучаю свободный порт
+        // Поучаю свободный порт для RemoteWebDriver
         private int GetOpenedPort()
         {
             int startingPort = 5000; // Начальный порт для проверки
 
             while (startingPort < 65535) // Проверяем порты до максимального значения
             {
-                if (IsPortAvailable(startingPort)) // Проверяем доступность порта
+                if (IsPortAvailable(startingPort) && IsPortAvailableForRemoteWebDriver(startingPort))
                 {
                     return startingPort; // Возвращаем свободный порт
                 }
-                else
-                {
-                    startingPort++; // Увеличиваем порт и проверяем следующий
-                }
+
+                startingPort++; // Увеличиваем порт и проверяем следующий
             }
 
-            Console.WriteLine("Не удалось найти свободный порт"); // Если свободный порт не найден
+            Console.WriteLine("Не удалось найти свободный порт для RemoteWebDriver"); // Если свободный порт не найден
             return 0;
         }
 
-        // Проверяю доступность порта
+        // Проверяю, что порт доступен
         private bool IsPortAvailable(int port)
         {
             try
@@ -127,5 +143,22 @@ namespace EABotToTheGame.Managers
                 return true; // Если возникает исключение, порт свободен
             }
         }
+
+        // Проверяю, что порт доступен и подходит для RemoteWebDriver
+        private bool IsPortAvailableForRemoteWebDriver(int port)
+        {
+            try
+            {
+                var uri = new Uri($"http://localhost:{port}/status");
+                using var client = new WebClient();
+                string response = client.DownloadString(uri);
+                return response.Contains("\"ready\":true"); // Проверяем, что порт доступен для RemoteWebDriver
+            }
+            catch (WebException)
+            {
+                return false; // Если возникает исключение, порт не подходит
+            }
+        }
+
     }
 }
