@@ -16,24 +16,26 @@ namespace EABotToTheGame.Managers
         // Запуск браузера
         public List<int> Launch()
         {
-            List<int> lounchedPorts = new List<int>();
-
+            List<int> predefinedPorts = GetPredefinedPorts(); // Получаем заранее определённые порты
+            List<int> launchedPorts = new List<int>();
 
             _browserPaths = BrowserPaths();
             if (_browserPaths.Count == 0) // Если не получили список путей браузеров
             {
                 Console.WriteLine($"Не удалось получить пути для браузеров");
-                return lounchedPorts;
+                return launchedPorts;
             }
 
             foreach (string browserPath in _browserPaths)
             {
-                int openedPort = GetOpenedPort();
-                if (openedPort == 0) // Если не получили порт
+                if (predefinedPorts.Count == 0)
                 {
-                    Console.WriteLine("Не найден не один доступный порт для открытия на нём браузера, проверь это");
-                    return lounchedPorts;
+                    Console.WriteLine("Не заданы заранее определённые порты для RemoteWebDriver");
+                    return launchedPorts;
                 }
+
+                int openedPort = predefinedPorts[0]; // Берём первый порт из списка
+                predefinedPorts.RemoveAt(0); // Удаляем использованный порт из списка
 
                 try
                 {
@@ -50,11 +52,11 @@ namespace EABotToTheGame.Managers
 
                     // Запускаем процесс
                     Process.Start(psi);
-                    Thread.Sleep(1000);
+                    Thread.Sleep(5000);
 
                     if (IsBrowserLaunched(openedPort)) // Проверка запущен браузер или нет
                     {
-                        lounchedPorts.Add(openedPort);
+                        launchedPorts.Add(openedPort);
                     }
                 }
                 catch (Exception ex)
@@ -62,8 +64,15 @@ namespace EABotToTheGame.Managers
                     Console.WriteLine($"Ошибка при запуске Chrome: {ex.Message}");
                 }
             }
-            return lounchedPorts;
+            return launchedPorts;
         }
+
+        // Получаем заранее определённые порты
+        private List<int> GetPredefinedPorts()
+        {
+            return new List<int> { 9222, 4444 }; // Пример портов, вы можете добавить свои
+        }
+
 
         // Проверяю запустился ли браузер
         private bool IsBrowserLaunched(int port)

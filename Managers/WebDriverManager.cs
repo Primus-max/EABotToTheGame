@@ -38,11 +38,11 @@ public class WebDriverManager
                     options.AddArgument("--disable-extensions");
                     options.AddArgument("--disable-extensions-file-access-check");
                     options.AddArgument("--disable-extensions-http-throttling");
-                    options.AddArgument($"--remote-debugging-port={port}");
+                    options.DebuggerAddress = $"localhost:{port}";
                     options.AddArgument("--disable-popup-blocking");
 
                     var service = ChromeDriverService.CreateDefaultService();
-                    service.HideCommandPromptWindow = true;
+                    service.HideCommandPromptWindow = true; // Скрыть окно командной строки драйвера Chrome
 
                     var driver = new ChromeDriver(service, options);
 
