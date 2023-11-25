@@ -1,31 +1,60 @@
-﻿namespace EABotToTheGame.Managers
+﻿using System.Net.Sockets;
+
+namespace EABotToTheGame.Managers
 {
     public class WebDriverManager
     {
-        private IWebDriver _driver = null!;
+        private Dictionary<WhoIAm, IWebDriver> _drivers = new Dictionary<WhoIAm, IWebDriver>();
 
-        public IWebDriver GetDriver()
+        public IWebDriver GetDriver(WhoIAm whoIam)
         {
-            if (_driver == null)
+            if (!_drivers.ContainsKey(whoIam))
             {
-                var options = new ChromeOptions();
-                options.AddArgument("--silent");
-                options.AddArgument("--disable-notifications");
-                options.AddArgument("--disable-extensions");
-                options.AddArgument("--disable-extensions-file-access-check");
-                options.AddArgument("--disable-extensions-http-throttling");
-                options.DebuggerAddress = "localhost:9222";
-                options.AddArgument("--disable-popup-blocking");
-
-                var service = ChromeDriverService.CreateDefaultService();
-                service.HideCommandPromptWindow = true; // Скрыть окно командной строки драйвера Chrome
-
-                _driver = new ChromeDriver(service, options);
+                _drivers[whoIam] = CreateDriver(whoIam);
             }
-           
-            return _driver;
+
+            return _drivers[whoIam];
         }
+
+        // Создаю драйвер
+        private IWebDriver CreateDriver(WhoIAm whoIam)
+        {
+            int port = GetPortForRole();
+
+            if (IsPortAvailable(port))
+            {
+                try
+                {
+                    var options = new ChromeOptions();
+                    options.AddArgument("--silent");
+                    options.AddArgument("--disable-notifications");
+                    options.AddArgument("--disable-extensions");
+                    options.AddArgument("--disable-extensions-file-access-check");
+                    options.AddArgument("--disable-extensions-http-throttling");
+                    options.AddArgument($"--remote-debugging-port={port}");
+                    options.AddArgument("--disable-popup-blocking");
+
+                    var service = ChromeDriverService.CreateDefaultService();
+                    service.HideCommandPromptWindow = true;
+
+                    using var driver = new ChromeDriver(service, options);
+
+                    return driver;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Не удалось создать драйвер {ex.Message}");
+                    return null;
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Порт {port} уже используется");
+                return null;
+            }
+
+        }
+
        
     }
-
 }

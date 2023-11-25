@@ -6,6 +6,7 @@ global using EABotToTheGame.Services;
 global using Microsoft.Extensions.DependencyInjection;
 global using OpenQA.Selenium;
 global using OpenQA.Selenium.Chrome;
+global using System.Diagnostics;
 global using Telegram.Bot;
 global using Telegram.Bot.Exceptions;
 global using Telegram.Bot.Polling;
