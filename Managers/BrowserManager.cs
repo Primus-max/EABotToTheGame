@@ -1,8 +1,4 @@
-﻿using Newtonsoft.Json;
-using System.Net;
-using System.Net.Sockets;
-
-namespace EABotToTheGame.Managers
+﻿namespace EABotToTheGame.Managers
 {
     public class BrowserManager
     {
@@ -70,7 +66,7 @@ namespace EABotToTheGame.Managers
         // Получаем заранее определённые порты
         private List<int> GetPredefinedPorts()
         {
-            return new List<int> { 9222, 4444 }; // Пример портов, вы можете добавить свои
+            return new List<int> { 9222, 4444 }; // ХАРДКОД!!!
         }
 
 

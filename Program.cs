@@ -9,8 +9,7 @@ namespace EABotToTheGame
         {
             
             // Создание контейнера DI и регистрация зависимостей
-            var serviceProvider = new ServiceCollection()
-                .AddSingleton<IWebDriver>(provider => new ChromeDriver()) // Пример для Selenium WebDriver
+            var serviceProvider = new ServiceCollection()                
                 .AddSingleton<ITelegramBotClient>(provider => new TelegramBotClient("6926422184:AAEHQycwfIUMT7gSAxx5OFoj2h1isJPG3Lk")) // Токен для бота
                 .AddSingleton<TelegramBotController>()
                 .AddSingleton<WebDriverManager>() // Открываю браузеры на портах и подключа к ним драйвера. Созданю один экземпляр который хранит список
