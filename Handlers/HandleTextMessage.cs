@@ -1,5 +1,4 @@
-﻿
-namespace EABotToTheGame.Handlers
+﻿namespace EABotToTheGame.Handlers
 {
 
     public class HandleTextMessage : IHadlerManager
@@ -44,21 +43,10 @@ namespace EABotToTheGame.Handlers
                 if (string.IsNullOrEmpty(update.Message.Text)) return;
 
                 string codeAuth = update.Message.Text;
-
-                // В зависимости от мода вызываю метод 
-                switch (AppMode.AutoMode)
-                {
-                    case AppMode.AutoMode:
-                        _autoMode.CompleteCodeReceivedTask(codeAuth);
-                        break;
-                    case AppMode.ManualMode:
-                        // Здесь код для ручного режима
-
-                }
-
+                _autoMode.CompleteCodeReceivedTask(codeAuth);              
             }
 
-            if(userState == UserState.ExpectedEmailAuthorizationsData)
+            if (userState == UserState.ExpectedEmailAuthorizationsData)
             {
                 // Логика для получения новых данных и передачи обратно в код
             }
@@ -68,15 +56,22 @@ namespace EABotToTheGame.Handlers
 
             }
 
+            // Если в ручном режиме
             if (currentMode == AppMode.ManualMode)
             {
+                // Разбираю полученные данные
                 string resiveAuthData = update.Message.Text;
                 string email = update.Message.Text.Split(" ")[0];
                 string password = update.Message.Text.Split(" ")[1];
 
                 AuthData authData = new() { Email = email, Password = password };
 
-                // Здесь вызываем метод для заполнения данных, делания скриншота и отправки
+                // Информирую
+                string message = "Данные получил, приступаю к работе";
+                await botClient.SendTextMessageAsync(userId, message);
+
+                // Запускаю работу
+                await _autoMode.ExecuteAsync(botClient, update, cancellationToken, authData);
             }
         }
     }

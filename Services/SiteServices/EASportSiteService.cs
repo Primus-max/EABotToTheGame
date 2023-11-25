@@ -1,5 +1,4 @@
 ﻿using OpenQA.Selenium.Support.UI;
-using System.Xml.Linq;
 
 namespace EABotToTheGame.Services.SiteServices
 {
@@ -23,12 +22,12 @@ namespace EABotToTheGame.Services.SiteServices
         {
             SetEmailToInput(email);
             SetPasswordToInput(password);
-            SubmitAuthFrom();
+            SubmitAuthForm();
 
-            return WrongAuth(); // Проверку на успешную(или нет) авторизацию
+            return IsAuth(); // Проверку на успешную(или нет) авторизацию
         }
 
-       
+
         /// <summary>
         /// Отправить код на email
         /// </summary>
@@ -70,8 +69,8 @@ namespace EABotToTheGame.Services.SiteServices
             {
                 IWebElement emailInput = _wait.Until(e => e.FindElement(By.Id("email")));
                 emailInput.Clear();
-                Thread.Sleep(500);
-                emailInput.SendKeys(email);
+                Thread.Sleep(1500);
+                ClearAndEnterText(emailInput, email);                
             }
             catch (Exception)
             {
@@ -86,8 +85,8 @@ namespace EABotToTheGame.Services.SiteServices
             {
                 IWebElement passwordInput = _wait.Until(e => e.FindElement(By.Id("password")));
                 passwordInput.Clear();
-                Thread.Sleep(500);
-                passwordInput.SendKeys(password);
+                Thread.Sleep(1500);
+                ClearAndEnterText(passwordInput, password);
             }
             catch (Exception)
             {
@@ -96,19 +95,31 @@ namespace EABotToTheGame.Services.SiteServices
         }
 
         // Подтверждаю отправку кода на почту
-        private void SubmitAuthFrom()
+        private void SubmitAuthForm()
         {
             try
             {
-                // Найдите элемент формы для отправки и выполните Submit()
                 IWebElement formElement = _wait.Until(e => e.FindElement(By.Id("login-form")));
-                formElement.Submit();
-            }
-            catch (Exception)
-            {
+                Thread.Sleep(1500);
 
+                // Попробуйте использовать метод Submit()
+                try
+                {
+                    formElement.Submit();
+                }
+                catch (Exception)
+                {
+                    // Если Submit() не сработал, используйте JavaScript для нажатия кнопки
+                    IJavaScriptExecutor jsExecutor = (IJavaScriptExecutor)_driver;
+                    jsExecutor.ExecuteScript("arguments[0].click();", formElement);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Не удалось нажать кнопку авторизации {ex.Message}");
             }
         }
+
 
 
         // Вставляю код для отправи
@@ -117,12 +128,22 @@ namespace EABotToTheGame.Services.SiteServices
             try
             {
                 IWebElement setCodeInput = _wait.Until(e => e.FindElement(By.Id("twoFactorCode")));
-                setCodeInput.Clear();
+
+                // Очищаем поле ввода
+                //IJavaScriptExecutor executor = (IJavaScriptExecutor)_driver;
+                //executor.ExecuteScript("arguments[0].value = '';", setCodeInput);
+
+                ClearAndEnterText(setCodeInput, code);
+
+                // Задержка, если это необходимо
                 Thread.Sleep(1000);
-                setCodeInput.SendKeys(code.Trim());
+
+                // Вводим текст
+               // executor.ExecuteScript($"arguments[0].value = '{code.Trim()}';", setCodeInput);
             }
             catch (Exception)
             {
+                // Обработка исключений
             }
         }
 
@@ -133,7 +154,10 @@ namespace EABotToTheGame.Services.SiteServices
             {
                 // <a role="button" class="otkbtn otkbtn-primary  zero-margin" href="javascript:void(0);" id="btnSubmit" style="float:right;max-width:100%;">Sign in</a>
                 IWebElement submitCodeBtn = _wait.Until(e => e.FindElement(By.Id("btnSubmit")));
-                submitCodeBtn.Click();
+                Thread.Sleep(1500);
+                IJavaScriptExecutor executor = (IJavaScriptExecutor)_driver;
+                executor.ExecuteScript("arguments[0].click();", submitCodeBtn);
+                //submitCodeBtn.Click();
             }
             catch (Exception)
             {
@@ -152,7 +176,7 @@ namespace EABotToTheGame.Services.SiteServices
                 // Проверить наличие элемента
                 return errorElement != null;
             }
-            catch (NoSuchElementException)
+            catch (Exception)
             {
                 // Если элемент не найден, вернуть false
                 return false;
@@ -163,7 +187,7 @@ namespace EABotToTheGame.Services.SiteServices
         // Метод ожидания загрузки страницы после того как отправили код и авторизовались
         public bool WaitingDownLoadPage()
         {
-            WebDriverWait wait = new(_driver, TimeSpan.FromSeconds(240));
+            WebDriverWait wait = new(_driver, TimeSpan.FromSeconds(500));
             try
             {
                 IWebElement navBarCurrency = wait.Until(e => e.FindElement(By.CssSelector("div.view-navbar-currency")));
@@ -176,24 +200,95 @@ namespace EABotToTheGame.Services.SiteServices
             }
         }
 
+        // Закрываю всплывшее окно
+        public void CloseFuckingPopup()
+        {
+            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(7));
+            try
+            {
+                IWebElement popUp = wait.Until(e => e.FindElement(By.CssSelector("div.ut-livemessage")));
+                var closeButton = popUp.FindElement(By.CssSelector("button.btn-standard.call-to-action"));
+
+                // Добавляем обработчик события нажатия клавиши Escape
+                _driver.FindElement(By.TagName("body")).SendKeys(Keys.Escape);
+
+                // Ждем, чтобы убедиться, что всплывающее окно закрылось
+                Thread.Sleep(1000);
+
+                // Пытаемся кликнуть на кнопку закрытия, если она еще видима
+                if (IsElementVisible(closeButton))
+                {
+                    closeButton.Click();
+                }
+            }
+            catch (Exception)
+            {
+                // Обработка ошибки
+            }
+        }
+
+        private bool IsElementVisible(IWebElement element)
+        {
+            try
+            {
+                return element.Displayed && element.Enabled;
+            }
+            catch (NoSuchElementException)
+            {
+                return false;
+            }
+        }
+
+        // Метод вставки текста в текстовые поля
+        private static void ClearAndEnterText(IWebElement element, string text)
+        {
+            Random random = new Random();
+            // Используем JavaScriptExecutor для выполнения JavaScript-кода
+            IJavaScriptExecutor jsExecutor = (IJavaScriptExecutor)((IWrapsDriver)element).WrappedDriver;
+
+            // Очищаем поле ввода с помощью JavaScript
+            jsExecutor.ExecuteScript("arguments[0].value = '';", element);
+            // Установить стиль display элемента в block
+            jsExecutor.ExecuteScript("arguments[0].style.display = 'block';", element);
+            // Вставляем текст по одному символу без изменений
+            foreach (char letter in text)
+            {
+                if (letter == '\b')
+                {
+                    // Если символ является символом backspace, удаляем последний введенный символ
+                    element.SendKeys(Keys.Backspace);
+                }
+                else
+                {
+                    // Вводим символ
+                    element.SendKeys(letter.ToString());
+                }
+
+                Thread.Sleep(random.Next(50, 150));  // Добавляем небольшую паузу между вводом каждого символа
+            }
+            Thread.Sleep(random.Next(300, 700));
+        }
+
+
         // Проверка успешной авторизации для получени кода подтверждения
-        private bool WrongAuth()
+        private bool IsAuth()
         {
             WebDriverWait wait = new(_driver, TimeSpan.FromSeconds(5));
             try
             {
-                // Поиск элемента по тексту
-                IWebElement errorElement = wait.Until(e => e.FindElement(By.XPath("//p[@class='otkinput-errormsg otkc' and contains(text(), 'Your credentials are incorrect or have expired.')]")));
-
-                // Проверка наличия элемента
+                wait.Until(e =>
+                {
+                    IWebElement element = e.FindElement(By.XPath("//p[@class='otkinput-errormsg otkc']"));
+                    return element.Displayed && element.Text.Contains("Your credentials are incorrect or have expired.");
+                });
+                // Если код дошел до этого момента, значит, условие выполнилось
                 return false;
             }
             catch (Exception)
             {
-                // Если элемент не найден, возвращаем false
+                // Если элемент не найден или условие не выполнилось, возвращаем false
                 return true;
             }
         }
-
     }
 }

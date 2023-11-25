@@ -1,4 +1,6 @@
-﻿namespace EABotToTheGame.Managers
+﻿using OpenQA.Selenium.Support.UI;
+
+namespace EABotToTheGame.Managers
 {
     /// <summary>
     /// Класс-менеджер сохранения открытых вкладок и переключения между ними
@@ -36,13 +38,9 @@
                 }
                 else
                 {
-                    // Открываем новую вкладку через WebDriver
-                    IJavaScriptExecutor js = (IJavaScriptExecutor)_driver;
-                    js.ExecuteScript("window.open();");
-
-                    // Переключаемся на новую вкладку
-                    _driver.SwitchTo().Window(_driver.WindowHandles.Last());
-
+                    // Открытие новой вкладки
+                    _driver.SwitchTo().NewWindow(WindowType.Tab);                   
+                   
                     // Навигация по URL
                     _driver.Navigate().GoToUrl(url);
 
@@ -55,6 +53,7 @@
                 // Обработка ошибки
             }
         }
+
 
         /// <summary>
         /// Переключаюсь между вкладками

@@ -11,7 +11,7 @@ public class ScreenshotService
     /// <exception cref="ArgumentNullException"></exception>
     public ScreenshotService(IWebDriver driver)
     {
-        _driver = driver ?? throw new ArgumentNullException(nameof(driver));
+        _driver = driver ;
     }
 
     /// <summary>
@@ -33,34 +33,41 @@ public class ScreenshotService
         var screenshot = ((ITakesScreenshot)_driver).GetScreenshot();
 
         // Создаем имя файла и путь для сохранения
-        var screenshotPath = Path.Combine(outputDirectory, $"{fileName}_wrong.png");
+        var screenshotPath = Path.Combine(outputDirectory, $"{fileName}_full.png");
+
+        // Сохраняем полный скриншот в файл
+        screenshot.SaveAsFile(screenshotPath, ScreenshotImageFormat.Png);
 
         if (fullScreenshot)
         {
-            // Если нужен полный скриншот, сохраняем его и возвращаем путь
-            screenshot.SaveAsFile(screenshotPath, ScreenshotImageFormat.Png);
+            // Если нужен полный скриншот, возвращаем путь
             return screenshotPath;
         }
         else
         {
-            // Если нужен обрезанный скриншот, обрезаем и сохраняем
-            int x = 100;
-            int y = 100;
-            int width = 500;
-            int height = 500;
-
-            using (var image = new MagickImage(screenshot.AsByteArray))
+            using (var image = new MagickImage(screenshotPath))
             {
-                image.Crop(new MagickGeometry(x, y, width, height));
+                // Задаем размеры обрезки и отступы (в данном примере)
+                int cropWidth = 400;
+                int cropHeight = 80;
+                int topOffset = 60;
 
-                // Создаем имя для обрезанного скриншота
-                var croppedFileName = $"{fileName}.png";
+                // Вычисляем координаты правого верхнего угла
+                int rightX = image.Width - cropWidth;
+                int topY = topOffset;
 
-                // Сохраняем обрезанный скриншот и возвращаем путь
-                var croppedScreenshotPath = Path.Combine(outputDirectory, croppedFileName);
-                image.Write(croppedScreenshotPath);
+                // Обрезаем изображение
+                image.Crop(new MagickGeometry(rightX, topY, cropWidth, cropHeight));
 
-                return croppedScreenshotPath;
+                // Создаем имя для обрезанного изображения
+                var croppedFileName = $"cropped_{DateTime.Now:yyyyMMdd_HHmmss}.png";
+                var croppedImagePath = Path.Combine(outputDirectory, croppedFileName);
+
+                // Сохраняем обрезанное изображение
+                image.Write(croppedImagePath);
+
+                // Возвращаем путь к обрезанному изображению
+                return croppedImagePath;
             }
         }
     }

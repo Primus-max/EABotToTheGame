@@ -22,6 +22,10 @@
                 // Устанавливаю состояние
                 _appModeManager.SetAppMode(userId, AppMode.AutoMode);
 
+                // Информирую
+                string message = "Ты выбрал авторежим, приступаю к работе, о ходе процесса буду уведомлять";
+                await botClient.SendTextMessageAsync(userId, message);
+
                 // Запускаю работу в автоматическом режиме
                 await _autoMode.ExecuteAsync(botClient, update, cancellationToken);
             }
