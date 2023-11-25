@@ -1,4 +1,6 @@
-﻿global using EABotToTheGame.Interfaces;
+﻿global using EABotToTheGame.Buttons;
+global using EABotToTheGame.Handlers;
+global using EABotToTheGame.Interfaces;
 global using EABotToTheGame.Intergaces;
 global using EABotToTheGame.Managers;
 global using EABotToTheGame.Models;
@@ -16,4 +18,3 @@ global using Telegram.Bot.Polling;
 global using Telegram.Bot.Types;
 global using Telegram.Bot.Types.Enums;
 global using Telegram.Bot.Types.ReplyMarkups;
-
