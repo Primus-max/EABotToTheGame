@@ -158,7 +158,7 @@ namespace EABotToTheGame.Services
         private IWebDriver InitializeDriver()
         {
             WebDriverManager webDriverManager = new();
-            return webDriverManager.GetDriver();
+            return new ChromeDriver();
         }
 
         // Метод вставки текста в текстовые поля

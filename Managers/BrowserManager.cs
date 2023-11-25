@@ -19,7 +19,7 @@ namespace EABotToTheGame.Managers
 
 
             _browserPaths = BrowserPaths();
-            if (_browserPaths.Count == 0)
+            if (_browserPaths.Count == 0) // Если не получили список путей браузеров
             {
                 Console.WriteLine($"Не удалось получить пути для браузеров");
                 return lounchedPorts;
@@ -28,7 +28,7 @@ namespace EABotToTheGame.Managers
             foreach (string browserPath in _browserPaths)
             {
                 int openedPort = GetOpenedPort();
-                if (openedPort == 0)
+                if (openedPort == 0) // Если не получили порт
                 {
                     Console.WriteLine("Не найден не один доступный порт для открытия на нём браузера, проверь это");
                     return lounchedPorts;
@@ -36,7 +36,7 @@ namespace EABotToTheGame.Managers
 
                 try
                 {
-                    // Параметры командной строки для запуска Chrome с флагом --remote-debugging-port=9222
+                    // Параметры командной строки для запуска Chrome с флагом --remote-debugging-port=port
                     string chromeOptions = $"--remote-debugging-port={openedPort}";
 
                     // Создаем процесс для запуска Chrome
@@ -70,6 +70,7 @@ namespace EABotToTheGame.Managers
             return true;
         }
 
+        // Получаю пути браузеров
         private List<string> BrowserPaths()
         {
             string filePath = "config.json";

@@ -7,6 +7,10 @@ namespace EABotToTheGame
     {
         static async Task Main(string[] args)
         {
+            // ТЭСТЫ
+            BrowserManager browserManager = new BrowserManager();
+           browserManager.Launch();
+
 
             // Создание контейнера DI и регистрация зависимостей
             var serviceProvider = new ServiceCollection()

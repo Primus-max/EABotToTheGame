@@ -19,9 +19,9 @@ namespace EABotToTheGame.Managers
         // Создаю драйвер
         private IWebDriver CreateDriver(WhoIAm whoIam)
         {
-            int port = GetPortForRole();
+            //int port = GetPortForRole();
 
-            if (IsPortAvailable(port))
+            if (true)
             {
                 try
                 {
@@ -31,7 +31,7 @@ namespace EABotToTheGame.Managers
                     options.AddArgument("--disable-extensions");
                     options.AddArgument("--disable-extensions-file-access-check");
                     options.AddArgument("--disable-extensions-http-throttling");
-                    options.AddArgument($"--remote-debugging-port={port}");
+                    options.AddArgument($"--remote-debugging-port={9222}");
                     options.AddArgument("--disable-popup-blocking");
 
                     var service = ChromeDriverService.CreateDefaultService();
@@ -49,7 +49,7 @@ namespace EABotToTheGame.Managers
             }
             else
             {
-                Console.WriteLine($"Порт {port} уже используется");
+               // Console.WriteLine($"Порт {port} уже используется");
                 return null;
             }
 
