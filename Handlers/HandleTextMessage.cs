@@ -1,23 +1,22 @@
 ﻿namespace EABotToTheGame.Handlers
 {
-
     public class HandleTextMessage : IHadlerManager
     {
         private readonly BotStateMachine _botStateMachine;
-        private readonly IDataWaitService<AuthData> _authDataWaitService;
+        private readonly DataWaitService _dataWaitService;       
         private readonly UserStateManager _userStateManager;
-        public HandleTextMessage(BotStateMachine botStateMachine, IDataWaitService<AuthData> authDataWaitService, UserStateManager userStateManager)
+        public HandleTextMessage(BotStateMachine botStateMachine, DataWaitService dataWaitService, UserStateManager userStateManager)
         {
             _botStateMachine = botStateMachine;
-            _authDataWaitService = authDataWaitService;
-            _userStateManager = userStateManager;
+            _dataWaitService = dataWaitService;
+            _userStateManager = userStateManager;           
         }
 
         public async Task ExecuteAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
             if (botClient == null || update == null) return;
 
-            long userId = update?.Message?.From?.Id ?? update?.CallbackQuery?.From?.Id ?? 0;
+            long userId = update?.Message?.From?.Id ?? (update?.CallbackQuery?.From?.Id ?? 0);
 
             // Метод для выбора навигации (перемещение по состоянием)
             await _botStateMachine.ProcessUpdateAsync(update, cancellationToken);
@@ -36,7 +35,15 @@
                     Password = gotUserData[1],
 
                 };
-                _authDataWaitService.SetData(authData);
+                _dataWaitService.SetAuthData(authData);
+            }
+
+            // Если ожидаю код авторизации
+            if(currentUserState == UserState.ExpectedCodeAuthorizations)
+            {
+                string code = update?.Message?.Text;
+
+                _dataWaitService.SetStringData(code);
             }
         }
     }

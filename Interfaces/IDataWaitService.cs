@@ -3,6 +3,6 @@
     public interface IDataWaitService<T>
     {
         Task<T> WaitForDataAsync();
-        void SetData(T data);
+        void SetData(TaskCompletionSource<T> dataReceivedTaskCompletionSource, T data);
     }
 }

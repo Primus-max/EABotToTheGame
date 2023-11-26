@@ -13,7 +13,7 @@ namespace EABotToTheGame.Managers
         private readonly InlineKeyboardProviderFactory _inlineKeyboardProviderFactory;
         private readonly WhoIAmManager _whoIAmManager;
         private Dictionary<long, int> _lastMessageIds = new Dictionary<long, int>();
-        private readonly IDataWaitService<AuthData> _authDataWaitService;
+        private readonly DataWaitService _authDataWaitService;
         private readonly UserStateManager _userStateManager;
 
         // Свойства бота
@@ -27,7 +27,7 @@ namespace EABotToTheGame.Managers
             AppModeManager appModeManager,
             InlineKeyboardProviderFactory inlineKeyboardProviderFactory,
             WhoIAmManager whoIAmManager,
-            IDataWaitService<AuthData> authDataWaitService,
+            DataWaitService authDataWaitService,
             UserStateManager userStateManager
             )
         {
@@ -122,7 +122,7 @@ namespace EABotToTheGame.Managers
                     // Устанавливаю статус для юзера ожидание регистрационных данных
                     _userStateManager.SetUserState(userId, UserState.ExpectedEmailAuthorizationsData);
                     // Получаю данные
-                    authData = await _authDataWaitService.WaitForDataAsync();
+                    authData = await _authDataWaitService.WaitForAuthDataAsync();
                 }
                 
                 // Запускаю работу с полученными данными или без них
