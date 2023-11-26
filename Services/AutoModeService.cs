@@ -11,41 +11,46 @@ namespace EABotToTheGame.Services
         private TaskCompletionSource<string> _codeReceivedTaskCompletionSource = null!;
         private TaskCompletionSource<AuthData> _authDataReceivedTaskCompletionSource = null!;
         private readonly UserStateManager _userStateManager;
+        private readonly WebDriverManager _webDriverManager = null!;
+        private readonly WhoIAmManager _whoIAmManager = null!;
 
-        public AutoMode(UserStateManager userStateManager)
+        public AutoMode(UserStateManager userStateManager, WebDriverManager webDriverManager, WhoIAmManager whoIAmManager)
         {
             _codeReceivedTaskCompletionSource = new TaskCompletionSource<string>(); // Код для ожидания завершения задачи, в нашем случае ожидание кода от юзера
             _authDataReceivedTaskCompletionSource = new TaskCompletionSource<AuthData>();
             _userStateManager = userStateManager;
+            _webDriverManager = webDriverManager;
+            _whoIAmManager = whoIAmManager;
         }
 
         public async Task ExecuteAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, AuthData authData = null!)
         {
             if (botClient == null || update == null) return;
 
-            _driver = InitializeDriver(); // Получаю драйвер
+            long userId = update?.Message?.From?.Id ?? update?.CallbackQuery?.From?.Id ?? 0; // ID юзера
+
+            WhoIAm whoIAm = _whoIAmManager.TellMeWhoIAm(userId); // Получаю статус юзера
+
+            _driver = _webDriverManager.GetDriver(whoIAm); // Получаю драйвер для юзера
 
             TabManager tabManager = new TabManager(_driver); // Создаю конструктор менеджера вкладок          
 
             BlazeTrackService blazeTrack = new(_driver);
             tabManager.OpenOrSwitchTab(BlazeTrackUrl);
 
-            long userId = 0; // Начальное значение
 
             // Если передали данные значит в ручном режиме
             if (authData != null)
             {
                 _authData = authData;
-                userId = update.Message.Chat.Id; // Id юзера
             }
             else
             {
                 AuthData auth = blazeTrack.GetAuthData(); // Получаю данные для авторизации
                 _authData = auth;
-                userId = update.CallbackQuery.From.Id; // Id юзера
             }
 
-            await Task.Delay(2000); 
+            await Task.Delay(2000);
 
             EASportSiteService eASportSiteService = new(_driver); // Сервис работы с EASports
             tabManager.OpenOrSwitchTab(EASportUrl);// Переключаюсь на EASports
@@ -69,7 +74,7 @@ namespace EABotToTheGame.Services
 
                         // Уведомляю о полученных данных
                         string gotAuthDataMessage = $"Данные получены, пробую повторную авторизацию";
-                        await botClient.SendTextMessageAsync(userId, gotAuthDataMessage); 
+                        await botClient.SendTextMessageAsync(userId, gotAuthDataMessage);
                     }
 
                     _userStateManager.SetUserState(userId, UserState.Start); // Возвращаю статус
@@ -112,7 +117,7 @@ namespace EABotToTheGame.Services
 
 
                     bool isDownLoadedPage = eASportSiteService.WaitingDownLoadPage(); // Ожидание полной загрузки страницы
-                    
+
                     eASportSiteService.CloseFuckingPopup(); // Проверяю если открылся PopUp
                     await Task.Delay(500);
 
@@ -146,19 +151,6 @@ namespace EABotToTheGame.Services
         public void CompleteCodeReceivedTask(string code)
         {
             _codeReceivedTaskCompletionSource.TrySetResult(code);
-        }
-
-        // Метод ожидания повторных данных (email, password)
-        public void CompleteAuthDataReceivedTask(AuthData authData)
-        {
-            _authDataReceivedTaskCompletionSource.TrySetResult(authData);
-        }
-
-        // Получаю драйвер
-        private IWebDriver InitializeDriver()
-        {
-            WebDriverManager webDriverManager = new();
-            return webDriverManager.GetDriver();
         }
 
         // Метод вставки текста в текстовые поля

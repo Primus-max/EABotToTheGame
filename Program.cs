@@ -1,26 +1,31 @@
-﻿using EABotToTheGame.Buttons;
-using EABotToTheGame.Handlers;
-
-namespace EABotToTheGame
+﻿namespace EABotToTheGame
 {
     internal class Program
     {
         static async Task Main(string[] args)
         {
-
+            string token = GetToken();
             // Создание контейнера DI и регистрация зависимостей
             var serviceProvider = new ServiceCollection()
-                .AddSingleton<IWebDriver>(provider => new ChromeDriver()) // Пример для Selenium WebDriver
-                .AddSingleton<ITelegramBotClient>(provider => new TelegramBotClient("6926422184:AAEHQycwfIUMT7gSAxx5OFoj2h1isJPG3Lk")) // Токен для бота
+                .AddSingleton<ITelegramBotClient>(provider => new TelegramBotClient(token)) // Токен для бота
                 .AddSingleton<TelegramBotController>()
+                .AddSingleton<WebDriverManager>() // Открываю браузеры на портах и подключа к ним драйвера. Созданю один экземпляр который хранит список
                 .AddSingleton<AutoMode>() // Режим работы
-                .AddSingleton<ManualMode>() // Режим работы
-                .AddScoped<IInlineKeyboardProvider, DefaultInlineKeyboardProvider>() // Кнопки
+                .AddScoped(typeof(IDataWaitService<>), typeof(DataWaitService<>)) // Сервис ожидания ввода данных пользователем
+                .AddSingleton<ManualMode>() // Режим работы                
                 .AddScoped<HandleCallbackQuery>() // Перехватчик сообщений с CallBackQuery
                 .AddScoped<HandleTextMessage>() // Перехватчик текстовых сообщений
                 .AddScoped<AppModeManager>() // Хранитель состояний для режима приложения
                 .AddScoped<UserStateManager>() // Хранитель состояний для юзеров
+                .AddSingleton<BotStateMachine>() // Паттерн FSM хранитель состояний
+                .AddSingleton<WhoIAmManager>() // Хранитель ролей 
+                .AddTransient<InlineKeyboardProviderFactory>() // Фабрика панелей (кнопок)
+                .AddScoped<IInlineKeyboardProvider, СhoiceRoleModeInlineKeyboardProvider>() // Панель выбора роли юзера
+                .AddScoped<IInlineKeyboardProvider, СhoiceModeInlineKeyboardProvider>() // Панель выбора мода работы бота
                 .BuildServiceProvider();
+
+            // Сразу создаю экземпляр для создания драйверов
+            // var webDriverManager = serviceProvider.GetRequiredService<WebDriverManager>();
 
             // Создание главного класса и вызов начального метода
             var botController = serviceProvider.GetRequiredService<TelegramBotController>();
@@ -29,6 +34,27 @@ namespace EABotToTheGame
             Console.WriteLine($"НЕ нажимайте любую кнопку! Это остановит работу бота");
             Console.ReadKey();
 
+        }
+
+        public static string GetToken()
+        {
+            string filePath = "config.json";
+
+            try
+            {
+                // Чтение содержимого файла
+                string jsonContent = System.IO.File.ReadAllText(filePath);
+
+                // Десериализация JSON в объект
+                var config = JsonConvert.DeserializeObject<Config>(jsonContent);
+
+                return config?.TelegramToken;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading config file: {ex.Message}");
+            }
+            return string.Empty;
         }
     }
 }

@@ -2,15 +2,15 @@
 {
     public class WhoIAmManager
     {
-        private Dictionary<long, UserState> UserStates;
+        private Dictionary<long, WhoIAm> WhoIAms;
         public WhoIAmManager()
         {
-            UserStates = new Dictionary<long, UserState>();
+            WhoIAms = new Dictionary<long, WhoIAm>();
         }
 
-        public UserState TellMeWhoIAm(long userId)
+        public WhoIAm TellMeWhoIAm(long userId)
         {
-            if (UserStates.TryGetValue(userId, out var state))
+            if (WhoIAms.TryGetValue(userId, out var state))
             {
                 return state;
             }
@@ -20,11 +20,11 @@
             return defaultState;
         }
 
-        public void WhiteWhoIAm(long userId, UserState state)
+        public void WhiteWhoIAm(long userId, WhoIAm state)
         {
             try
             {
-                UserStates[userId] = state;
+                WhoIAms[userId] = state;
 
                 Console.WriteLine($"Установил состояние {state} для : {userId}");
             }
@@ -34,18 +34,18 @@
             }
         }
 
-        private UserState GetDefaultWhoIAm(long userId)
+        private WhoIAm GetDefaultWhoIAm(long userId)
         {
             // Здесь можно асинхронно запросить состояние по умолчанию, например, из базы данных
             // и вернуть его
-            return WhoIAm.Customer; // Простой пример
+            return WhoIAm.IAmCustomer; // Простой пример
         }
     }
 
 
     public enum WhoIAm
     {
-        Customer, // Заказчик
-        Performer // Исполнитель
+        IAmCustomer, // Заказчик
+        IAmPerformer // Исполнитель
     }
 }
