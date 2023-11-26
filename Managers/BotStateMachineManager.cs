@@ -1,16 +1,20 @@
-﻿namespace EABotToTheGame.Managers
+﻿using EABotToTheGame.Interfaces;
+
+namespace EABotToTheGame.Managers
 {
     public class BotStateMachine
     {
 
         private readonly ITelegramBotClient _botClient;
         private readonly IInlineKeyboardProvider _keyboardProvider;
-        private readonly AutoMode _autoMode;
+        private readonly AutoMode _autoMode;        
         private readonly ManualMode _manualMode;
         private readonly AppModeManager _appModeManager;
         private readonly InlineKeyboardProviderFactory _inlineKeyboardProviderFactory;
         private readonly WhoIAmManager _whoIAmManager;
         private Dictionary<long, int> _lastMessageIds = new Dictionary<long, int>();
+        private readonly IDataWaitService<AuthData> _authDataWaitService;
+        private readonly UserStateManager _userStateManager;
 
         // Свойства бота
         private BotState _currentState;
@@ -22,7 +26,10 @@
             ManualMode manualMode,
             AppModeManager appModeManager,
             InlineKeyboardProviderFactory inlineKeyboardProviderFactory,
-            WhoIAmManager whoIAmManager)
+            WhoIAmManager whoIAmManager,
+            IDataWaitService<AuthData> authDataWaitService,
+            UserStateManager userStateManager
+            )
         {
             _botClient = botClient;
             _keyboardProvider = keyboardProvider;
@@ -33,6 +40,8 @@
             _previousState = BotState.StartScreenState; // Устанавливаем начальное предыдущее состояние
             _inlineKeyboardProviderFactory = inlineKeyboardProviderFactory;
             _whoIAmManager = whoIAmManager;
+            _authDataWaitService = authDataWaitService;
+            _userStateManager = userStateManager;
         }
 
         public async Task ProcessUpdateAsync(Update update, CancellationToken cancellationToken)
@@ -73,7 +82,6 @@
             }
         }
 
-
         private async Task ProcessChoiceRoleState(long userId, Update update, CancellationToken cancellationToken)
         {
             if (_currentState != BotState.ChoiceRole || update == null) return;
@@ -93,21 +101,33 @@
 
         private async Task ProcessChoiceModeState(long userId, Update update, CancellationToken cancellationToken)
         {
-            // Логика для переходов между состояниями
-            if (update?.CallbackQuery?.Data == "AutoMode")
+            if (_currentState != BotState.ChoiceModeState || update == null) return;
+
+            // Получаю текущий мод
+            if (!string.IsNullOrEmpty(update?.CallbackQuery?.Data) && Enum.TryParse<AppMode>(update.CallbackQuery.Data, out var mode)) 
             {
-                _appModeManager.SetAppMode(userId, AppMode.AutoMode);
+                _appModeManager.SetAppMode(userId, mode);
+
+                AuthData authData = new(); 
+
                 _previousState = _currentState; // Сохраняем текущее состояние
-                _currentState = BotState.AutoModeState;
-                await _autoMode.ExecuteAsync(_botClient, update, cancellationToken);
-            }
-            else if (update?.CallbackQuery?.Data == "ManualMode")
-            {
-                _appModeManager.SetAppMode(userId, AppMode.ManualMode);
-                _previousState = _currentState; // Сохраняем текущее состояние
-                _currentState = BotState.ManualModeState;
-                await _botClient.SendTextMessageAsync(userId, "Введи почту и пароль через пробел, пример: [email@email.ru 12345qwerty]");
-            }
+                //_currentState = mode = ;
+                bool isAutoMode = mode == AppMode.AutoMode;
+
+                // Если ручно режим, запрашиваю данные
+                if (!isAutoMode) 
+                {
+                    // Запрашиваю данные
+                    await _botClient.SendTextMessageAsync(userId, "Введи почту и пароль через пробел, пример: [email@email.ru 12345qwerty]");
+                    // Устанавливаю статус для юзера ожидание регистрационных данных
+                    _userStateManager.SetUserState(userId, UserState.ExpectedEmailAuthorizationsData);
+                    // Получаю данные
+                    authData = await _authDataWaitService.WaitForDataAsync();
+                }
+                
+                // Запускаю работу с полученными данными или без них
+                await _autoMode.ExecuteAsync(_botClient, update, cancellationToken, authData);               
+            }                     
         }
 
 
@@ -170,7 +190,6 @@
 
             _currentState = nextState;
         }
-
 
         public enum BotState
         {
