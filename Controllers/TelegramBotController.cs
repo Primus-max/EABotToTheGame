@@ -35,17 +35,25 @@ namespace EABotToTheGame
                 ThrowPendingUpdates = true
             };
 
-            await _botClient.ReceiveAsync(
-                 updateHandler: HandleUpdateAsync,
-                 pollingErrorHandler: HandlePollingErrorAsync,
-                 receiverOptions: receiverOptions,
-                 cancellationToken: cts.Token
-             );
+            // Запуск асинхронной обработки обновлений
+            var receiveTask = _botClient.ReceiveAsync(
+                updateHandler: HandleUpdateAsync,
+                pollingErrorHandler: HandlePollingErrorAsync,
+                receiverOptions: receiverOptions,
+                cancellationToken: cts.Token
+            );
+
+            // Информирую хозяина бота что можно начинать работу, значит браузеры загружены
+            long creatorId = 334837473;
+            string messageInfoStart = "Тыкай в старт, я готов к работе";
+            await _botClient.SendTextMessageAsync(creatorId, messageInfoStart);
+
+            // Дождитесь завершения асинхронной обработки обновлений
+            await receiveTask;
 
             var me = await _botClient.GetMeAsync();
             Console.WriteLine($"Bot Id: {me.Id}, Bot Name: {me.Username}");
         }
-
         /// <summary>
         /// Метод прослушивающий и обрабатывающий входящие сообщения от пользователей
         /// </summary>

@@ -69,7 +69,7 @@ namespace EABotToTheGame.Services
                     if (!isAuth)
                     {
                         // Если не авторизовался, отрпавляю сообщение и ставлю ожидание на новые данные
-                        string wrongAuthMessage = $"Проблема с авторизацией: Your credentials are incorrect or have expired. Please try again or...";
+                        string wrongAuthMessage = $"Проблема с авторизацией, отправь email  и пароль, я попробую снова авторизоваться, пример: [email@email.ru 12345qwerty]";
                         await botClient.SendTextMessageAsync(userId, wrongAuthMessage);
 
                         _userStateManager.SetUserState(userId, UserState.ExpectedEmailAuthorizationsData); // Устанавливаю состояние ожидания кода авторизации
