@@ -11,7 +11,7 @@
                 .AddSingleton<TelegramBotController>()
                 .AddSingleton<WebDriverManager>() // Открываю браузеры на портах и подключа к ним драйвера. Созданю один экземпляр который хранит список
                 .AddSingleton<AutoMode>() // Режим работы
-                .AddScoped(typeof(IDataWaitService<>), typeof(DataWaitService<>)) // Сервис ожидания ввода данных пользователем
+                .AddScoped<DataWaitService>() // Сервис ожидания ввода данных пользователем
                 .AddSingleton<ManualMode>() // Режим работы                
                 .AddScoped<HandleCallbackQuery>() // Перехватчик сообщений с CallBackQuery
                 .AddScoped<HandleTextMessage>() // Перехватчик текстовых сообщений
@@ -25,7 +25,7 @@
                 .BuildServiceProvider();
 
             // Сразу создаю экземпляр для создания драйверов
-            // var webDriverManager = serviceProvider.GetRequiredService<WebDriverManager>();
+            var webDriverManager = serviceProvider.GetRequiredService<WebDriverManager>();
 
             // Создание главного класса и вызов начального метода
             var botController = serviceProvider.GetRequiredService<TelegramBotController>();

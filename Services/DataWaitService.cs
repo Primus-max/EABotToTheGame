@@ -1,22 +1,37 @@
 ﻿namespace EABotToTheGame.Services
 {
-    public class DataWaitService<T> : IDataWaitService<T>
+    public class DataWaitService
     {
-        private TaskCompletionSource<T> _dataReceivedTaskCompletionSource;
+        private TaskCompletionSource<string> _stringDataCompletionSource;
+        private TaskCompletionSource<AuthData> _authDataCompletionSource;
 
         public DataWaitService()
         {
-            _dataReceivedTaskCompletionSource = new TaskCompletionSource<T>();
+            _stringDataCompletionSource = new TaskCompletionSource<string>();
+            _authDataCompletionSource = new TaskCompletionSource<AuthData>();
         }
 
-        public async Task<T> WaitForDataAsync()
+        public Task<string> WaitForStringDataAsync()
         {
-            return await _dataReceivedTaskCompletionSource.Task;
+            return _stringDataCompletionSource.Task;
         }
 
-        public void SetData(T data)
+        public void SetStringData(string data)
         {
-            _dataReceivedTaskCompletionSource.TrySetResult(data);
+            _stringDataCompletionSource.TrySetResult(data);
+            _stringDataCompletionSource = new TaskCompletionSource<string>(); // сбрасываем для повторного использования
+        }
+
+        public Task<AuthData> WaitForAuthDataAsync()
+        {
+            return _authDataCompletionSource.Task;
+        }
+
+        public void SetAuthData(AuthData data)
+        {
+            _authDataCompletionSource.TrySetResult(data);
+            _authDataCompletionSource = new TaskCompletionSource<AuthData>(); // сбрасываем для повторного использования
         }
     }
+
 }

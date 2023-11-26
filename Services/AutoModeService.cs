@@ -8,19 +8,24 @@ namespace EABotToTheGame.Services
         private readonly string BlazeTrackUrl = "https://blaze-track.com/site/orders?customer_id=1";
         private IWebDriver _driver = null!;
         private AuthData _authData;
-        private TaskCompletionSource<string> _codeReceivedTaskCompletionSource = null!;
-        private TaskCompletionSource<AuthData> _authDataReceivedTaskCompletionSource = null!;
+        private readonly DataWaitService _dataWaitService;        
         private readonly UserStateManager _userStateManager;
         private readonly WebDriverManager _webDriverManager = null!;
         private readonly WhoIAmManager _whoIAmManager = null!;
+        private readonly AppModeManager _appModeManager;
 
-        public AutoMode(UserStateManager userStateManager, WebDriverManager webDriverManager, WhoIAmManager whoIAmManager)
-        {
-            _codeReceivedTaskCompletionSource = new TaskCompletionSource<string>(); // Код для ожидания завершения задачи, в нашем случае ожидание кода от юзера
-            _authDataReceivedTaskCompletionSource = new TaskCompletionSource<AuthData>();
+        public AutoMode(UserStateManager userStateManager, 
+            WebDriverManager webDriverManager, 
+            WhoIAmManager whoIAmManager,
+            DataWaitService dataWaitService,             
+            AppModeManager appModeManager
+            )
+        {           
             _userStateManager = userStateManager;
             _webDriverManager = webDriverManager;
             _whoIAmManager = whoIAmManager;
+            _dataWaitService = dataWaitService;           
+            _appModeManager = appModeManager;
         }
 
         public async Task ExecuteAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, AuthData authData = null!)
@@ -33,11 +38,8 @@ namespace EABotToTheGame.Services
 
             _driver = _webDriverManager.GetDriver(whoIAm); // Получаю драйвер для юзера
 
-            TabManager tabManager = new TabManager(_driver); // Создаю конструктор менеджера вкладок          
-
-            BlazeTrackService blazeTrack = new(_driver);
-            tabManager.OpenOrSwitchTab(BlazeTrackUrl);
-
+            TabManager tabManager = new TabManager(_driver); // Создаю конструктор менеджера вкладок  
+            BlazeTrackService blazeTrack =null!;
 
             // Если передали данные значит в ручном режиме
             if (authData != null)
@@ -46,6 +48,8 @@ namespace EABotToTheGame.Services
             }
             else
             {
+                 blazeTrack = new(_driver);
+                tabManager.OpenOrSwitchTab(BlazeTrackUrl);
                 AuthData auth = blazeTrack.GetAuthData(); // Получаю данные для авторизации
                 _authData = auth;
             }
@@ -70,7 +74,7 @@ namespace EABotToTheGame.Services
 
                         _userStateManager.SetUserState(userId, UserState.ExpectedEmailAuthorizationsData); // Устанавливаю состояние ожидания кода авторизации
 
-                        _authData = await _authDataReceivedTaskCompletionSource.Task; // Ставлю на ожидание новых регистрационных данных 
+                        _authData = await _dataWaitService.WaitForAuthDataAsync(); // Ставлю на ожидание новых регистрационных данных 
 
                         // Уведомляю о полученных данных
                         string gotAuthDataMessage = $"Данные получены, пробую повторную авторизацию";
@@ -100,7 +104,7 @@ namespace EABotToTheGame.Services
                         // Устанавливаю статус ожидания сообщения
                         _userStateManager.SetUserState(userId, UserState.ExpectedCodeAuthorizations);
 
-                        string codeAuthorization = await _codeReceivedTaskCompletionSource.Task; // Ожидаю код атворизации
+                        string codeAuthorization = await _dataWaitService.WaitForStringDataAsync(); // Ожидаю код атворизации
 
                         // Информирую
                         string infoMessage = "Код получил, продолжаю работу";
@@ -127,10 +131,16 @@ namespace EABotToTheGame.Services
                         ScreenshotService screenshotService = new ScreenshotService(_driver);
                         string screenPath = screenshotService.CaptureAndCropScreenshot();
 
-                        tabManager.OpenOrSwitchTab(BlazeTrackUrl); // Переключаюсь на блейзера
+                        AppMode currentAppMode = _appModeManager.GetCurrentAppMode(userId); // Получаю текущий мод
 
-                        blazeTrack.ConfirmOrder(screenPath); // Отправляю скрин и подтверждаю
+                        // В автомоде отправляю скрин на сайт и в телегу
+                        if(currentAppMode == AppMode.AutoMode)
+                        {
+                            tabManager.OpenOrSwitchTab(BlazeTrackUrl); // Переключаюсь на блейзера
+                            blazeTrack.ConfirmOrder(screenPath); // Отправляю скрин и подтверждаю
+                        }
 
+                        // Если ручной режим, то отправляю только в телегу
                         string succsessMessage = "Авторизация успешно пройдена, скриншот отправил";
                         await SendMessage(botClient, userId, cancellationToken, succsessMessage, screenPath);
                     }
@@ -146,13 +156,7 @@ namespace EABotToTheGame.Services
             }
             tabManager.OpenOrSwitchTab(EASportUrl);
         }
-
-        // Метод для завершения ожидания кода от пользователя, возвращает код
-        public void CompleteCodeReceivedTask(string code)
-        {
-            _codeReceivedTaskCompletionSource.TrySetResult(code);
-        }
-
+             
         // Метод вставки текста в текстовые поля
         private static void ClearAndEnterText(IWebElement element, string text)
         {

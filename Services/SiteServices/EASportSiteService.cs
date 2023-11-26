@@ -70,7 +70,7 @@ namespace EABotToTheGame.Services.SiteServices
                 IWebElement emailInput = _wait.Until(e => e.FindElement(By.Id("email")));
                 emailInput.Clear();
                 Thread.Sleep(1500);
-                ClearAndEnterText(emailInput, email);                
+                ClearAndEnterText(emailInput, email);
             }
             catch (Exception)
             {
@@ -139,7 +139,7 @@ namespace EABotToTheGame.Services.SiteServices
                 Thread.Sleep(1000);
 
                 // Вводим текст
-               // executor.ExecuteScript($"arguments[0].value = '{code.Trim()}';", setCodeInput);
+                // executor.ExecuteScript($"arguments[0].value = '{code.Trim()}';", setCodeInput);
             }
             catch (Exception)
             {
@@ -273,22 +273,28 @@ namespace EABotToTheGame.Services.SiteServices
         // Проверка успешной авторизации для получени кода подтверждения
         private bool IsAuth()
         {
-            WebDriverWait wait = new(_driver, TimeSpan.FromSeconds(5));
+            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(5));
             try
             {
-                wait.Until(e =>
-                {
-                    IWebElement element = e.FindElement(By.XPath("//p[@class='otkinput-errormsg otkc']"));
-                    return element.Displayed && element.Text.Contains("Your credentials are incorrect or have expired.");
-                });
-                // Если код дошел до этого момента, значит, условие выполнилось
-                return false;
+                IWebElement parentDiv = wait.Until(e => e.FindElement(By.XPath("//div[@id='online-general-error']")));
+
+                // Вы можете использовать parentDiv по вашему усмотрению
+                // Например, получить p элемент внутри parentDiv
+                IWebElement pElement = parentDiv.FindElement(By.XPath(".//p[@class='otkinput-errormsg otkc']"));
+
+                // Затем получить текст из p элемента
+                string authErrorText = pElement.Text;
+                bool isWrongText = authErrorText.Contains("Your credentials are incorrect or have expired. Please try again or reset your password");
+                if (isWrongText)
+                    return false;
+                return true;
             }
-            catch (Exception)
+            catch (NoSuchElementException)
             {
-                // Если элемент не найден или условие не выполнилось, возвращаем false
                 return true;
             }
         }
+
+
     }
 }
