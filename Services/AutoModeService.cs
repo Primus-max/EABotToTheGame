@@ -128,20 +128,21 @@ namespace EABotToTheGame.Services
                     // Если страница загрузилась, то отправляю правильный скрин в телегу и вставляю на сайт в поле
                     if (isDownLoadedPage)
                     {
-                        ScreenshotService screenshotService = new ScreenshotService(_driver);
+                        ScreenshotService screenshotService = new (_driver);
                         string screenPath = screenshotService.CaptureAndCropScreenshot();
 
                         AppMode currentAppMode = _appModeManager.GetCurrentAppMode(userId); // Получаю текущий мод
 
+                        string succsessMessage = "Авторизация успешно пройдена, скриншот отправил";
                         // В автомоде отправляю скрин на сайт и в телегу
-                        if(currentAppMode == AppMode.AutoMode)
+                        if (currentAppMode == AppMode.AutoMode)
                         {
                             tabManager.OpenOrSwitchTab(BlazeTrackUrl); // Переключаюсь на блейзера
                             blazeTrack.ConfirmOrder(screenPath); // Отправляю скрин и подтверждаю
+                            
+                            await SendMessage(botClient, userId, cancellationToken, succsessMessage, screenPath);
                         }
-
-                        // Если ручной режим, то отправляю только в телегу
-                        string succsessMessage = "Авторизация успешно пройдена, скриншот отправил";
+                        
                         await SendMessage(botClient, userId, cancellationToken, succsessMessage, screenPath);
                     }
                     else

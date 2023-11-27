@@ -32,6 +32,7 @@
 
     public enum AppMode
     {
+        Default,
         AutoMode,
         ManualMode        
     }

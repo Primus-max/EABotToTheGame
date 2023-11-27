@@ -34,20 +34,32 @@ namespace EABotToTheGame.Services.SiteServices
         /// <returns></returns>
         public bool SendCodeOnEmail()
         {
-            try
-            {
-                IWebElement sendCodeButton = _wait.Until(e => e.FindElement(By.Id("btnSendCode")));
+           bool isDisplaied = false;
+            int tryCount = 0;
 
-                IJavaScriptExecutor executor = (IJavaScriptExecutor)_driver;
-                executor.ExecuteScript("arguments[0].click();", sendCodeButton);
-                //sendCodeButton.Click();
-
-                return true;
-            }
-            catch (Exception)
+            do
             {
-                return false;
-            }
+                tryCount++;
+                try
+                {
+                    IWebElement sendCodeButton = _wait.Until(e => e.FindElement(By.Id("btnSendCode")));
+
+                    Thread.Sleep(1500);
+                    IJavaScriptExecutor executor = (IJavaScriptExecutor)_driver;
+                    executor.ExecuteScript("arguments[0].click();", sendCodeButton);
+                    //sendCodeButton.Click();
+
+                    Thread.Sleep(1000);
+                    isDisplaied = sendCodeButton.Displayed;
+
+                    return false;
+                }
+                catch (Exception)
+                {
+                    return true;
+                }
+
+            } while (isDisplaied || tryCount == 20);               
         }
 
         /// <summary>
@@ -154,7 +166,7 @@ namespace EABotToTheGame.Services.SiteServices
             {
                 // <a role="button" class="otkbtn otkbtn-primary  zero-margin" href="javascript:void(0);" id="btnSubmit" style="float:right;max-width:100%;">Sign in</a>
                 IWebElement submitCodeBtn = _wait.Until(e => e.FindElement(By.Id("btnSubmit")));
-                Thread.Sleep(1500);
+                Thread.Sleep(3000);
                 IJavaScriptExecutor executor = (IJavaScriptExecutor)_driver;
                 executor.ExecuteScript("arguments[0].click();", submitCodeBtn);
                 //submitCodeBtn.Click();
@@ -233,7 +245,7 @@ namespace EABotToTheGame.Services.SiteServices
             {
                 return element.Displayed && element.Enabled;
             }
-            catch (NoSuchElementException)
+            catch (Exception)
             {
                 return false;
             }
@@ -289,7 +301,7 @@ namespace EABotToTheGame.Services.SiteServices
                     return false;
                 return true;
             }
-            catch (NoSuchElementException)
+            catch (Exception)
             {
                 return true;
             }

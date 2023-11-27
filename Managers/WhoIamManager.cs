@@ -44,7 +44,7 @@
 
 
     public enum WhoIAm
-    {
+    {       
         IAmCustomer, // Заказчик
         IAmPerformer // Исполнитель
     }
