@@ -73,8 +73,15 @@ public class WebDriverManager
         for (int i = 0; i < drivers.Count; i++)
         {
             // Устанавливаем позиции и размеры окон для каждого браузера
-            drivers[i].Manage().Window.Position = new System.Drawing.Point(i * screenWidth / drivers.Count, 0);
-            drivers[i].Manage().Window.Size = new System.Drawing.Size(screenWidth / drivers.Count - 10, screenHeight - 10);
+            try
+            {
+                drivers[i].Manage().Window.Position = new System.Drawing.Point(i * screenWidth / drivers.Count, 0);
+                drivers[i].Manage().Window.Size = new System.Drawing.Size(screenWidth / drivers.Count - 10, screenHeight - 10);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Не удалось установить размер окна {ex.Message}");
+            }
         }
     }
 

@@ -8,23 +8,23 @@ namespace EABotToTheGame.Services
         private readonly string BlazeTrackUrl = "https://blaze-track.com/site/orders?customer_id=1";
         private IWebDriver _driver = null!;
         private AuthData _authData;
-        private readonly DataWaitService _dataWaitService;        
+        private readonly DataWaitService _dataWaitService;
         private readonly UserStateManager _userStateManager;
         private readonly WebDriverManager _webDriverManager = null!;
         private readonly WhoIAmManager _whoIAmManager = null!;
         private readonly AppModeManager _appModeManager;
 
-        public AutoMode(UserStateManager userStateManager, 
-            WebDriverManager webDriverManager, 
+        public AutoMode(UserStateManager userStateManager,
+            WebDriverManager webDriverManager,
             WhoIAmManager whoIAmManager,
-            DataWaitService dataWaitService,             
+            DataWaitService dataWaitService,
             AppModeManager appModeManager
             )
-        {           
+        {
             _userStateManager = userStateManager;
             _webDriverManager = webDriverManager;
             _whoIAmManager = whoIAmManager;
-            _dataWaitService = dataWaitService;           
+            _dataWaitService = dataWaitService;
             _appModeManager = appModeManager;
         }
 
@@ -39,7 +39,7 @@ namespace EABotToTheGame.Services
             _driver = _webDriverManager.GetDriver(whoIAm); // Получаю драйвер для юзера
 
             TabManager tabManager = new TabManager(_driver); // Создаю конструктор менеджера вкладок  
-            BlazeTrackService blazeTrack =null!;
+            BlazeTrackService blazeTrack = null!;
 
             // Если передали данные значит в ручном режиме
             if (authData != null)
@@ -48,7 +48,7 @@ namespace EABotToTheGame.Services
             }
             else
             {
-                 blazeTrack = new(_driver);
+                blazeTrack = new(_driver);
                 tabManager.OpenOrSwitchTab(BlazeTrackUrl);
                 AuthData auth = blazeTrack.GetAuthData(); // Получаю данные для авторизации
                 _authData = auth;
@@ -88,18 +88,22 @@ namespace EABotToTheGame.Services
 
                 if (isAuth) // Если авторизовался запрашиваю код подтверждения
                 {
-                    bool isSendedCode = eASportSiteService.SendCodeOnEmail(); // Нажимаю кнопку отправить код на почту, на вский случай проверяю операцию
+                    eASportSiteService.SendCodeOnEmail(); // Нажимаю кнопку отправить код на почту, на вский случай проверяю операцию
 
-                    // Повторить если не получилось нажать кнопку отправки кода
-                    if (!isSendedCode)
+                    string codeTextMessageGet;
+
+                    bool isFirstTryCount = true; 
+                    bool isAuthCode = false;
+
+
+                    do
                     {
-                        string cantSendCodeOnEmail = $"Что-то пошло не так, не удалось отправить код на почту, жмакни еще раз";
-                    }
-                    else
-                    {
-                        // Информирую
-                        string getMeCodeMessage = "Отправь мне код авторизации";
-                        await SendMessage(botClient, userId, cancellationToken, getMeCodeMessage);
+                        // Если уже повторная авторизация или первая
+                        if (!isFirstTryCount)
+                            codeTextMessageGet = $"Что-то пошло не так, не удалось отправить код на почту, жмакни еще раз";                      
+                        codeTextMessageGet = "Отправь мне код авторизации";
+
+                        await SendMessage(botClient, userId, cancellationToken, codeTextMessageGet);
 
                         // Устанавливаю статус ожидания сообщения
                         _userStateManager.SetUserState(userId, UserState.ExpectedCodeAuthorizations);
@@ -107,8 +111,8 @@ namespace EABotToTheGame.Services
                         string codeAuthorization = await _dataWaitService.WaitForStringDataAsync(); // Ожидаю код атворизации
 
                         // Информирую
-                        string infoMessage = "Код получил, продолжаю работу";
-                        await SendMessage(botClient, userId, cancellationToken, infoMessage);
+                       string sucsessCodeTest = "Код получил, продолжаю работу";
+                        await SendMessage(botClient, userId, cancellationToken, sucsessCodeTest);
 
                         if (!string.IsNullOrEmpty(codeAuthorization))
                         {
@@ -117,7 +121,12 @@ namespace EABotToTheGame.Services
                             // TODO сделать уведопление если не валидный код
                         }
 
-                    }
+                        isAuthCode = eASportSiteService.IsAuth();
+
+                        isFirstTryCount= false;
+
+                    } while (isAuthCode);
+
 
 
                     bool isDownLoadedPage = eASportSiteService.WaitingDownLoadPage(); // Ожидание полной загрузки страницы
@@ -128,7 +137,7 @@ namespace EABotToTheGame.Services
                     // Если страница загрузилась, то отправляю правильный скрин в телегу и вставляю на сайт в поле
                     if (isDownLoadedPage)
                     {
-                        ScreenshotService screenshotService = new (_driver);
+                        ScreenshotService screenshotService = new(_driver);
                         string screenPath = screenshotService.CaptureAndCropScreenshot();
 
                         AppMode currentAppMode = _appModeManager.GetCurrentAppMode(userId); // Получаю текущий мод
@@ -139,10 +148,10 @@ namespace EABotToTheGame.Services
                         {
                             tabManager.OpenOrSwitchTab(BlazeTrackUrl); // Переключаюсь на блейзера
                             blazeTrack.ConfirmOrder(screenPath); // Отправляю скрин и подтверждаю
-                            
+
                             await SendMessage(botClient, userId, cancellationToken, succsessMessage, screenPath);
                         }
-                        
+
                         await SendMessage(botClient, userId, cancellationToken, succsessMessage, screenPath);
                     }
                     else
@@ -157,7 +166,7 @@ namespace EABotToTheGame.Services
             }
             tabManager.OpenOrSwitchTab(EASportUrl);
         }
-             
+
         // Метод вставки текста в текстовые поля
         private static void ClearAndEnterText(IWebElement element, string text)
         {

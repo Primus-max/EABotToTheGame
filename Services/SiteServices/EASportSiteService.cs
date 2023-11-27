@@ -283,7 +283,7 @@ namespace EABotToTheGame.Services.SiteServices
 
 
         // Проверка успешной авторизации для получени кода подтверждения
-        private bool IsAuth()
+        public bool IsAuth()
         {
             WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(5));
             try
@@ -296,7 +296,8 @@ namespace EABotToTheGame.Services.SiteServices
 
                 // Затем получить текст из p элемента
                 string authErrorText = pElement.Text;
-                bool isWrongText = authErrorText.Contains("Your credentials are incorrect or have expired. Please try again or reset your password");
+                bool isWrongText = authErrorText.Contains("Your credentials are incorrect or have expired. Please try again or reset your password") 
+                                   || authErrorText.Contains("The security code you entered is invalid");
                 if (isWrongText)
                     return false;
                 return true;
