@@ -90,42 +90,39 @@ namespace EABotToTheGame.Services
                 {
                     eASportSiteService.SendCodeOnEmail(); // Нажимаю кнопку отправить код на почту, на вский случай проверяю операцию
 
-                    string codeTextMessageGet;
-
-                    bool isFirstTryCount = true; 
                     bool isAuthCode = false;
-
+                    bool retry = false;
 
                     do
                     {
-                        // Если уже повторная авторизация или первая
-                        if (!isFirstTryCount)
-                            codeTextMessageGet = $"Что-то пошло не так, не удалось отправить код на почту, жмакни еще раз";                      
-                        codeTextMessageGet = "Отправь мне код авторизации";
+                        if (retry)
+                        {
+                            string errorCodeMessage = "Что-то пошло не так, не удалось отправить код, делаю повторную отправку";
+                            await SendMessage(botClient, userId, cancellationToken, errorCodeMessage);
+                            eASportSiteService.ResendVareficationCode();
+                        }
+                        else
+                        {
+                            string codeTextMessageGet = "Отправь мне код авторизации";
+                            await SendMessage(botClient, userId, cancellationToken, codeTextMessageGet);
+                        }
 
-                        await SendMessage(botClient, userId, cancellationToken, codeTextMessageGet);
-
-                        // Устанавливаю статус ожидания сообщения
                         _userStateManager.SetUserState(userId, UserState.ExpectedCodeAuthorizations);
 
-                        string codeAuthorization = await _dataWaitService.WaitForStringDataAsync(); // Ожидаю код атворизации
+                        string codeAuthorization = await _dataWaitService.WaitForStringDataAsync();
 
-                        // Информирую
-                       string sucsessCodeTest = "Код получил, продолжаю работу";
-                        await SendMessage(botClient, userId, cancellationToken, sucsessCodeTest);
+                        string successCodeTest = "Код получил, продолжаю работу";
+                        await SendMessage(botClient, userId, cancellationToken, successCodeTest);
 
                         if (!string.IsNullOrEmpty(codeAuthorization))
                         {
-                            eASportSiteService.SubmitCodeAuthorizations(codeAuthorization); // Отправляю код
-
-                            // TODO сделать уведопление если не валидный код
+                            eASportSiteService.SubmitCodeAuthorizations(codeAuthorization);
                         }
 
                         isAuthCode = eASportSiteService.IsAuth();
+                        retry = !isAuthCode; // Если isAuthCode равно false, устанавливаем retry в true
 
-                        isFirstTryCount= false;
-
-                    } while (isAuthCode);
+                    } while (!isAuthCode);
 
 
 

@@ -75,8 +75,30 @@ public class WebDriverManager
             // Устанавливаем позиции и размеры окон для каждого браузера
             try
             {
-                drivers[i].Manage().Window.Position = new System.Drawing.Point(i * screenWidth / drivers.Count, 0);
-                drivers[i].Manage().Window.Size = new System.Drawing.Size(screenWidth / drivers.Count - 10, screenHeight - 10);
+                int windowWidth = screenWidth / drivers.Count;
+
+                // Первый браузер
+                if (i == 0)
+                {
+                    windowWidth -= 30; // Уменьшаем ширину на 30 пикселей
+                }
+                // Второй браузер
+                else if (i == 1)
+                {
+                    int additionalWidth = 30; // Увеличиваем ширину на 30 пикселей
+                    windowWidth += additionalWidth;
+
+                    int previousWidth = screenWidth / drivers.Count - 30;
+                    int offsetX = i * previousWidth; // Смещение вправо относительно предыдущего окна
+
+                    windowWidth = Math.Min(windowWidth, screenWidth - offsetX); // Не даем окну выходить за границы экрана
+                }
+
+                int windowX = i * (screenWidth / drivers.Count) + (i == 1 ? -30 : 0); // Смещение вправо для второго окна
+                int windowY = 0; // Позиция Y
+
+                drivers[i].Manage().Window.Position = new System.Drawing.Point(windowX, windowY);
+                drivers[i].Manage().Window.Size = new System.Drawing.Size(windowWidth, screenHeight - 10);
             }
             catch (Exception ex)
             {
@@ -84,6 +106,7 @@ public class WebDriverManager
             }
         }
     }
+
 
     [DllImport("user32.dll")]
     public static extern int GetSystemMetrics(int nIndex); // Индексы для размеров окна

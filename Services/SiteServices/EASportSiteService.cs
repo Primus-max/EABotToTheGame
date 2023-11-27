@@ -111,20 +111,21 @@ namespace EABotToTheGame.Services.SiteServices
         {
             try
             {
-                IWebElement formElement = _wait.Until(e => e.FindElement(By.Id("login-form")));
+                IWebElement formElement = _wait.Until(e => e.FindElement(By.Id("logInBtn")));
                 Thread.Sleep(1500);
 
-                // Попробуйте использовать метод Submit()
-                try
-                {
-                    formElement.Submit();
-                }
-                catch (Exception)
-                {
-                    // Если Submit() не сработал, используйте JavaScript для нажатия кнопки
-                    IJavaScriptExecutor jsExecutor = (IJavaScriptExecutor)_driver;
-                    jsExecutor.ExecuteScript("arguments[0].click();", formElement);
-                }
+                formElement.Click();
+                //// Попробуйте использовать метод Submit()
+                //try
+                //{
+                //    formElement.Submit();
+                //}
+                //catch (Exception)
+                //{
+                //    // Если Submit() не сработал, используйте JavaScript для нажатия кнопки
+                //    IJavaScriptExecutor jsExecutor = (IJavaScriptExecutor)_driver;
+                //    jsExecutor.ExecuteScript("arguments[0].click();", formElement);
+                //}
             }
             catch (Exception ex)
             {
@@ -281,6 +282,21 @@ namespace EABotToTheGame.Services.SiteServices
             Thread.Sleep(random.Next(300, 700));
         }
 
+        // Кнопка отправить код повторно на почту
+        public void ResendVareficationCode()
+        {
+            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(5));
+            try
+            {
+                IWebElement resendBtn = wait.Until(e => e.FindElement(By.Id("resend")));
+                Thread.Sleep(1200);
+                resendBtn.Click();
+            }
+            catch (Exception)
+            {
+
+            }
+        }
 
         // Проверка успешной авторизации для получени кода подтверждения
         public bool IsAuth()
@@ -288,11 +304,11 @@ namespace EABotToTheGame.Services.SiteServices
             WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(5));
             try
             {
-                IWebElement parentDiv = wait.Until(e => e.FindElement(By.XPath("//div[@id='online-general-error']")));
+                IWebElement parentDiv = wait.Until(e => e.FindElement(By.Id("online-general-error")));
 
                 // Вы можете использовать parentDiv по вашему усмотрению
                 // Например, получить p элемент внутри parentDiv
-                IWebElement pElement = parentDiv.FindElement(By.XPath(".//p[@class='otkinput-errormsg otkc']"));
+                IWebElement pElement = parentDiv.FindElement(By.TagName("P"));
 
                 // Затем получить текст из p элемента
                 string authErrorText = pElement.Text;
