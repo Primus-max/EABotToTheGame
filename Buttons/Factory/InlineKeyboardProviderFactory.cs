@@ -1,4 +1,4 @@
-﻿using static EABotToTheGame.Managers.BotStateMachine;
+﻿using static EABotToTheGame.Managers.BotStateManager;
 
 namespace EABotToTheGame.Buttons.Factory
 {

@@ -1,4 +1,4 @@
-﻿using static EABotToTheGame.Managers.BotStateMachine;
+﻿using static EABotToTheGame.Managers.BotStateManager;
 
 namespace EABotToTheGame.Services
 {
@@ -6,8 +6,7 @@ namespace EABotToTheGame.Services
     {
         private readonly ITelegramBotClient _botClient;
         private readonly InlineKeyboardProviderFactory _inlineKeyboardProviderFactory;
-        private readonly Dictionary<long, int> _lastMessageIds = new Dictionary<long, int>();
-        private BotState _currentState;
+        private readonly Dictionary<long, int> _lastMessageIds = new Dictionary<long, int>();        
 
         public MessageService(ITelegramBotClient botClient, InlineKeyboardProviderFactory inlineKeyboardProviderFactory)
         {
@@ -30,13 +29,6 @@ namespace EABotToTheGame.Services
 
             var sentMessage = await _botClient.SendTextMessageAsync(userId, message, cancellationToken: cancellationToken, replyMarkup: buttons);
             _lastMessageIds[userId] = sentMessage.MessageId;
-
-            _currentState = nextState;
-        }
-
-        public void UpdateBotState(BotState newState)
-        {
-            _currentState = newState;
         }
     }
 

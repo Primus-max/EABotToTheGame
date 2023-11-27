@@ -1,59 +1,53 @@
-﻿//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Text;
-//using System.Threading.Tasks;
+﻿namespace EABotToTheGame.Managers
+{
+    public class BotStateManager
+    {
+        // Свойства бота
+        private BotState _currentState;
+        private BotState _previousState;
+        private BotState _nextState;
+              
 
-//namespace EABotToTheGame.Managers
-//{
-//    public class BotStateManager
-//    {
-//        private Dictionary<long, BotState> BotStates;
-//        public BotStateManager()
-//        {
-//            BotStates = new Dictionary<long, BotState>();
-//        }
+        public BotState GetCurrentState()
+        {
+            return _nextState;
+        }
 
-//        public BotState TellMeWhoIAm(long userId)
-//        {
-//            if (BotStates.TryGetValue(userId, out var state))
-//            {
-//                return state;
-//            }
+        public BotState GetPreviousState()
+        {
+            return _previousState;
+        }
 
-//            // Если состояния нет в коллекции, по умолчанию можно асинхронно получить его из вашего сервиса
-//            var defaultState = GetDefaultWhoIAm(userId);
-//            return defaultState;
-//        }
+        public BotState GetNextState()
+        {
+            return _nextState;
+        }
 
-//        public void WhiteWhoIAm(long userId, WhoIAm state)
-//        {
-//            try
-//            {
-//                WhoIAms[userId] = state;
+        public void SetCurrentState(BotState newState)
+        {
+            _previousState = _currentState;
+            _currentState = newState;
+        }
 
-//                Console.WriteLine($"Установил состояние {state} для : {userId}");
-//            }
-//            catch (Exception)
-//            {
-//                // Обработка ошибок записи состояния пользователя
-//            }
-//        }
+        public void SetNextState(BotState newState)
+        {
+            _nextState = newState;  
+            _previousState = _currentState;
+        }
 
-//        private WhoIAm GetDefaultWhoIAm(long userId)
-//        {
-//            // Здесь можно асинхронно запросить состояние по умолчанию, например, из базы данных
-//            // и вернуть его
-//            return WhoIAm.Customer; // Простой пример
-//        }
-//    }
+        public void SetPreviousState(BotState newState)
+        {
+            _previousState = newState;            
+        }
 
-
-//    public enum BotState
-//    {
-//        StartScreenState,
-//        AutoModeState,
-//        ManualModeState
-//    }
-//}
+        public enum BotState
+        {
+            StartScreenState,
+            AutoModeState,
+            ManualModeState,
+            ChoiceRole,
+            ChoiceModeState,
+        }
+    }
+}
 
