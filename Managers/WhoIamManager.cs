@@ -45,6 +45,7 @@
 
     public enum WhoIAm
     {
+        Default,
         IAmCustomer, // Заказчик
         IAmPerformer // Исполнитель
     }

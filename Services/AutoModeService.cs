@@ -128,7 +128,7 @@ namespace EABotToTheGame.Services
                     // Если страница загрузилась, то отправляю правильный скрин в телегу и вставляю на сайт в поле
                     if (isDownLoadedPage)
                     {
-                        ScreenshotService screenshotService = new ScreenshotService(_driver);
+                        ScreenshotService screenshotService = new (_driver);
                         string screenPath = screenshotService.CaptureAndCropScreenshot();
 
                         AppMode currentAppMode = _appModeManager.GetCurrentAppMode(userId); // Получаю текущий мод

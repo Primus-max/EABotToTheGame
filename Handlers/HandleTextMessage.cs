@@ -1,4 +1,6 @@
-﻿namespace EABotToTheGame.Handlers
+﻿using static EABotToTheGame.Managers.BotStateMachine;
+
+namespace EABotToTheGame.Handlers
 {
     public class HandleTextMessage : IHadlerManager
     {
@@ -16,9 +18,11 @@
         {
             if (botClient == null || update == null) return;
 
+           
+
             long userId = update?.Message?.From?.Id ?? (update?.CallbackQuery?.From?.Id ?? 0);
 
-            // Метод для выбора навигации (перемещение по состоянием)
+            // Метод для выбора навигации (перемещение по состояниям)
             await _botStateMachine.ProcessUpdateAsync(update, cancellationToken);
 
             // Получаю текущий статус 

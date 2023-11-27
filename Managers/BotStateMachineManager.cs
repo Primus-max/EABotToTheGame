@@ -77,9 +77,25 @@ namespace EABotToTheGame.Managers
             {
                 _currentState = BotState.StartScreenState;
                 _nextState = BotState.ChoiceRole;
+
+                // Обнуляю состояния
+                _appModeManager.SetAppMode(userId, AppMode.Default);
+                _whoIAmManager.WhiteWhoIAm(userId, WhoIAm.Default);
+
                 string message = "Выбери кем управлять";
                 await SendMessage(userId, message, _nextState, cancellationToken);
             }
+            //else if (update.Message.Text.ToLower() == "/r") // Добавляем обработку кнопки "Старт"
+            //{
+            //    // Выполняем действия для начала сценария заново
+            //   // _currentState = BotState.InitialState; // Устанавливаем начальное состояние
+            //    _nextState = BotState.StartScreenState; // Устанавливаем следующее состояние
+
+            //    // Дополнительные действия, если нужно
+
+            //    string message = "Давай начнем заново!";
+            //    await SendMessage(userId, message, _nextState, cancellationToken);
+            //}
         }
 
         private async Task ProcessChoiceRoleState(long userId, Update update, CancellationToken cancellationToken)
