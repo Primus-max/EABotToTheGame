@@ -366,6 +366,23 @@ namespace EABotToTheGame.Services.SiteServices
             }
         }
 
+        // Нажать кнопку разлогиниться
+        public void LogOut()
+        {
+            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
+
+            try
+            {
+                IWebElement logoutButton = wait.Until(e => e.FindElement(By.Id("logout-and-relogin")));
+                Thread.Sleep(200);
+                logoutButton.Click();
+            }
+            catch (Exception)
+            {
+
+            }
+        }
+
         // Проверка успешной авторизации для получении кода подтверждения
         public bool IsAuth()
         {
