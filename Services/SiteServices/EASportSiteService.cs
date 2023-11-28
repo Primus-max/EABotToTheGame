@@ -32,7 +32,7 @@ namespace EABotToTheGame.Services.SiteServices
         /// Отправить код на email
         /// </summary>
         /// <returns></returns>
-        public bool SendCodeOnEmail()
+        public bool SendCodeOnDefaultService()
         {
             bool isDisplaied = false;
             int tryCount = 0;
@@ -52,11 +52,11 @@ namespace EABotToTheGame.Services.SiteServices
                     Thread.Sleep(1000);
                     isDisplaied = sendCodeButton.Displayed;
 
-                    return false;
+                    return true;
                 }
                 catch (Exception)
                 {
-                    return true;
+                    return false;
                 }
 
             } while (isDisplaied || tryCount == 20);
@@ -178,6 +178,33 @@ namespace EABotToTheGame.Services.SiteServices
             }
         }
 
+        // Получаю список доступных сервисов для отправки кода подтверждения
+        public int GetAllServicesForSendCode(bool isChecked = false, int sendCodeServiceIndex = 0) // Передаю значение в случае если просто проверяю, true = проверяю, иначе получаю и кликаю
+        {
+            WebDriverWait wait = new(_driver, TimeSpan.FromSeconds(5));
+            try
+            {
+                IList<IWebElement> codeSendServices = wait.Until(e => e.FindElements(By.CssSelector("div.origin-ux-radio-button-control.origin-ux-control.otkradioSVG")));
+
+                // Если больше одного сервиса, значит нужно будет в вызывающем методе отправить Id сервиса для его выбора
+                if (isChecked)
+                {
+                    return codeSendServices.Count;
+                }
+                else
+                {
+                    IWebElement selectedService = codeSendServices[sendCodeServiceIndex - 1];
+                    Thread.Sleep(200);
+                    selectedService.Click();
+                    return 0;
+                }
+            }
+            catch (Exception)
+            {
+                return 0;
+            }
+        }
+
         // Проверяю подошёл код или нет
         private bool IsInvalidSecurityCodeMessagePresent()
         {
@@ -276,7 +303,7 @@ namespace EABotToTheGame.Services.SiteServices
             }
         }
 
-
+        // Проверка на видимость элемента
         private bool IsElementVisible(IWebElement element)
         {
             try
