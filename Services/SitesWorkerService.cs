@@ -63,6 +63,7 @@ namespace EABotToTheGame.Services
 
             if (_authData != null)
             {
+                #region Авторизация по email и password для получения кода подтверждения
                 bool isAuth = false;
                 do
                 {
@@ -85,8 +86,10 @@ namespace EABotToTheGame.Services
 
                     _userStateManager.SetUserState(userId, UserState.Start); // Возвращаю статус
 
-                } while (!isAuth);
+                } while (!isAuth); 
+                #endregion
 
+               
 
                 if (isAuth) // Если авторизовался запрашиваю код подтверждения
                 {
@@ -94,7 +97,7 @@ namespace EABotToTheGame.Services
 
                     bool isAuthCode = false;
                     bool retry = false;
-
+                    #region Проверка на правильно введённый и отправленный код подтверджения
                     do
                     {
 
@@ -126,8 +129,9 @@ namespace EABotToTheGame.Services
                         retry = !isAuthCode; // Если isAuthCode равно false, устанавливаем retry в true
 
                     } while (!isAuthCode);
+                    #endregion
 
-
+                    #region Проверка если игрок онлайн
                     // Если игрок онлайн 
                     bool userIsSignedIntoAnotheDevice = eASportSiteService.IsSignedIntoAnotheDevice();
 
@@ -135,23 +139,42 @@ namespace EABotToTheGame.Services
                     if (userIsSignedIntoAnotheDevice)
                     {
                         // Если в автоматическом режиме, то ставлю на блейзе статус
-                        if(currentAppMode == AppMode.AutoMode)
+                        if (currentAppMode == AppMode.AutoMode)
                         {
                             tabManager.OpenOrSwitchTab(BlazeTrackUrl); // Переключаюсь на блейзера
                             blazeTrack.ConfirmOrder("ONLINE"); // Отправляю статус
-                        } 
-                        
+                        }
+
                         // Иначе просто отправляю сообещние
                         string messageTextInfo = "Игрок онлайн, поставил статус";
                         await SendMessage(botClient, userId, cancellationToken, messageTextInfo);
                     }
+                    #endregion
 
-                    bool isDownLoadedPage = eASportSiteService.WaitingDownLoadPage(); // Ожидание полной загрузки страницы                   
-
+                    bool isDownLoadedPage = eASportSiteService.WaitingDownLoadPage(); // Ожидание полной загрузки страницы  
 
                     eASportSiteService.CloseFuckingPopup(); // Проверяю если открылся PopUp
                     await Task.Delay(500);
 
+                    #region Проверка на блокировку пользователя
+                    // Открываю трансферы
+                    eASportSiteService.OpenTransfersList();
+                    // Если игрок заблокирован для трансферов
+                    bool isUserBlocked = eASportSiteService.IsUserBlockedTransfers();
+                    if (isUserBlocked)
+                    {
+                        // Информирую
+                        string userBlockedMessage = $"ЗАБЛОКИРОВАНЫ трансферы пользователя, работу остановил, можно работуть с другим аккаунтом";
+                        await SendMessage(botClient, userId, cancellationToken, userBlockedMessage);
+
+                        // Обнуляю мод, выходим
+                        _appModeManager.SetAppMode(userId, AppMode.Default); // Ставлю режим в неопределённый
+                        _userStateManager.SetUserState(userId, UserState.Start); // Возвращаю статус
+                        return;
+                    }
+                    #endregion
+
+                    #region Проверка авторизации и отправка скриншота с уведомлением
                     // Если страница загрузилась, то отправляю правильный скрин в телегу и вставляю на сайт в поле
                     if (isDownLoadedPage)
                     {
@@ -177,8 +200,15 @@ namespace EABotToTheGame.Services
                         string screenPAth = screenshotService.CaptureAndCropScreenshot(true); // Делаю полный скрин
                         string wrongMessageText = $"Не удалось сделать скриншот, скорее всего страница не была загружена";
                         await SendMessage(botClient, userId, cancellationToken, wrongMessageText, screenPAth);
+
+                        // Обнуляем мод, выходим
+                        _appModeManager.SetAppMode(userId, AppMode.Default); // Ставлю режим в неопределённый
+                        _userStateManager.SetUserState(userId, UserState.Start); // Возвращаю статус
+                        return;
                     }
-                }
+                    #endregion
+                } 
+                
             }
             tabManager.OpenOrSwitchTab(EASportUrl);
         }
