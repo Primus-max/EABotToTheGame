@@ -97,6 +97,7 @@ namespace EABotToTheGame.Services
 
                     do
                     {
+
                         if (retry)
                         {
                             string errorCodeMessage = "Что-то пошло не так, не удалось отправить код, делаю повторную отправку";
@@ -127,22 +128,26 @@ namespace EABotToTheGame.Services
                     } while (!isAuthCode);
 
 
-
-                    bool isDownLoadedPage = eASportSiteService.WaitingDownLoadPage(); // Ожидание полной загрузки страницы
-
                     // Если игрок онлайн 
                     bool userIsSignedIntoAnotheDevice = eASportSiteService.IsSignedIntoAnotheDevice();
-                    // Если да,  то ставим статус Online  на Blazer и отправляем скрин
-                    if (userIsSignedIntoAnotheDevice) 
-                    {
-                        ScreenshotService screenshotService = new(_driver);
-                        string screenPath = screenshotService.CaptureAndCropScreenshot();
 
-                        tabManager.OpenOrSwitchTab(BlazeTrackUrl); // Переключаюсь на блейзера
-                        blazeTrack.ConfirmOrder(screenPath, "ONLINE"); // Отправляю скрин и статус
-                        string messageTextInfo = "Игрок онлайн, отправил крин и поставил статус";
-                        await SendMessage(botClient, userId, cancellationToken, messageTextInfo, screenPath);
+                    // Если да,  то ставим статус Online  на Blazer и отправляем скрин
+                    if (userIsSignedIntoAnotheDevice)
+                    {
+                        // Если в автоматическом режиме, то ставлю на блейзе статус
+                        if(currentAppMode == AppMode.AutoMode)
+                        {
+                            tabManager.OpenOrSwitchTab(BlazeTrackUrl); // Переключаюсь на блейзера
+                            blazeTrack.ConfirmOrder("ONLINE"); // Отправляю статус
+                        } 
+                        
+                        // Иначе просто отправляю сообещние
+                        string messageTextInfo = "Игрок онлайн, поставил статус";
+                        await SendMessage(botClient, userId, cancellationToken, messageTextInfo);
                     }
+
+                    bool isDownLoadedPage = eASportSiteService.WaitingDownLoadPage(); // Ожидание полной загрузки страницы                   
+
 
                     eASportSiteService.CloseFuckingPopup(); // Проверяю если открылся PopUp
                     await Task.Delay(500);
@@ -151,7 +156,7 @@ namespace EABotToTheGame.Services
                     if (isDownLoadedPage)
                     {
                         ScreenshotService screenshotService = new(_driver);
-                        string screenPath = screenshotService.CaptureAndCropScreenshot();                        
+                        string screenPath = screenshotService.CaptureAndCropScreenshot();
 
                         string succsessMessage = "Авторизация успешно пройдена, скриншот отправил";
                         // В автомоде отправляю скрин на сайт и в телегу

@@ -24,8 +24,8 @@ namespace EABotToTheGame.Services.SiteServices
             {
                 Email = GetEmail(),
                 Password = GetPassword(),
-            }; 
-            
+            };
+
             return authData;
         }
 
@@ -33,9 +33,12 @@ namespace EABotToTheGame.Services.SiteServices
         /// Метод принятия заказа
         /// </summary>
         /// <param name="screenShotPath"></param>
-        public void ConfirmOrder(string screenShotPath, string status)
+        public void ConfirmOrder(string status, string screenShotPath = null!)
         {
-            UploadScreenShot(screenShotPath); // Выгружаю скриншот
+            // Если есть путь, значит выгружаем скрин
+            if (screenShotPath != null)
+                UploadScreenShot(screenShotPath); // Выгружаю скриншот
+
             Thread.Sleep(1000);
             SelectStatus(status); // Выбираю статус
             Thread.Sleep(1000);
@@ -60,11 +63,11 @@ namespace EABotToTheGame.Services.SiteServices
                 if (!string.IsNullOrEmpty(hrefValue))
                 {
                     ((IJavaScriptExecutor)_driver).ExecuteScript($"window.location.href = '{hrefValue}';");
-                }               
+                }
             }
             catch (Exception)
             {
-              
+
             }
         }
 

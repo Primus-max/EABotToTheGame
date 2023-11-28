@@ -34,7 +34,7 @@ namespace EABotToTheGame.Services.SiteServices
         /// <returns></returns>
         public bool SendCodeOnEmail()
         {
-           bool isDisplaied = false;
+            bool isDisplaied = false;
             int tryCount = 0;
 
             do
@@ -59,7 +59,7 @@ namespace EABotToTheGame.Services.SiteServices
                     return true;
                 }
 
-            } while (isDisplaied || tryCount == 20);               
+            } while (isDisplaied || tryCount == 20);
         }
 
         /// <summary>
@@ -243,19 +243,39 @@ namespace EABotToTheGame.Services.SiteServices
         // Проверка, что игрок онлайн
         public bool IsSignedIntoAnotheDevice()
         {
-            WebDriverWait wait = new(_driver, TimeSpan.FromSeconds(5));
+            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(20));
+
             try
             {
-                IWebElement isSignedText = wait.Until(e => e.FindElement(By.TagName("H2")));
-                bool isSigned = isSignedText.Text.Contains("Signed Into Another Device");
+                // Находим все элементы H2 на странице
+                IList<IWebElement> h2Elements = wait.Until(e => e.FindElements(By.TagName("H2")));
 
-                return isSigned;
+                // Перебираем каждый элемент H2
+                foreach (var h2Element in h2Elements)
+                {
+                    // Получаем текст текущего элемента H2
+                    string h2Text = h2Element.Text;
+
+                    // Проверяем, содержит ли текст элемента фразу "Signed Into Another Device"
+                    bool isSigned = h2Text.Contains("Signed Into Another Device");
+
+                    // Если найдено совпадение, возвращаем true
+                    if (isSigned)
+                    {
+                        return true;
+                    }
+                }
+
+                // Если не найдено ни одного элемента с нужным текстом, возвращаем false
+                return false;
             }
             catch (Exception)
             {
+                // В случае исключения возвращаем false
                 return false;
             }
         }
+
 
         private bool IsElementVisible(IWebElement element)
         {
@@ -328,7 +348,7 @@ namespace EABotToTheGame.Services.SiteServices
 
                 // Затем получить текст из p элемента
                 string authErrorText = pElement.Text;
-                bool isWrongText = authErrorText.Contains("Your credentials are incorrect or have expired. Please try again or reset your password") 
+                bool isWrongText = authErrorText.Contains("Your credentials are incorrect or have expired. Please try again or reset your password")
                                    || authErrorText.Contains("The security code you entered is invalid");
                 if (isWrongText)
                     return false;
