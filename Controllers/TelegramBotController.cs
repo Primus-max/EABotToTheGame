@@ -44,7 +44,9 @@ namespace EABotToTheGame
             );
 
             // Информирую хозяина бота что можно начинать работу, значит браузеры загружены
-            long creatorId = 6533456892;
+            long creatorId = 334837473;
+            //334837473
+            // мой 6533456892
             string messageInfoStart = "Тыкай в старт, я готов к работе";
             await _botClient.SendTextMessageAsync(creatorId, messageInfoStart);
 
