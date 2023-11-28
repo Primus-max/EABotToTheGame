@@ -10,9 +10,8 @@
                 .AddSingleton<ITelegramBotClient>(provider => new TelegramBotClient(token)) // Токен для бота
                 .AddSingleton<TelegramBotController>()
                 .AddSingleton<WebDriverManager>() // Открываю браузеры на портах и подключа к ним драйвера. Созданю один экземпляр который хранит список
-                .AddSingleton<AutoMode>() // Режим работы
-                .AddScoped<DataWaitService>() // Сервис ожидания ввода данных пользователем
-                .AddSingleton<ManualMode>() // Режим работы                
+                .AddSingleton<SitesWorkerService>() // Работа с сайтами
+                .AddScoped<DataWaitService>() // Сервис ожидания ввода данных пользователем                   
                 .AddScoped<HandleCallbackQuery>() // Перехватчик сообщений с CallBackQuery
                 .AddScoped<HandleTextMessage>() // Перехватчик текстовых сообщений
                 .AddScoped<AppModeManager>() // Хранитель состояний для режима приложения
