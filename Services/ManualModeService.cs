@@ -94,7 +94,7 @@ namespace EABotToTheGame.Services
 
                         tabManager.OpenOrSwitchTab(BlazeTrackUrl); // Переключаюсь на блейзера
 
-                        blazeTrack.ConfirmOrder(screenPath); // Отправляю скрин и подтверждаю
+                        blazeTrack.ConfirmOrder(screenPath, "START"); // Отправляю скрин и подтверждаю
 
                         string succsessMessage = "Авторизация успешно пройдена, скриншот отправил";
                         await SendMessage(botClient, userId, cancellationToken, succsessMessage, screenPath);

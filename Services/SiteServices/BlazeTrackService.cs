@@ -33,11 +33,11 @@ namespace EABotToTheGame.Services.SiteServices
         /// Метод принятия заказа
         /// </summary>
         /// <param name="screenShotPath"></param>
-        public void ConfirmOrder(string screenShotPath)
+        public void ConfirmOrder(string screenShotPath, string status)
         {
             UploadScreenShot(screenShotPath); // Выгружаю скриншот
             Thread.Sleep(1000);
-            SelectStatus(); // Выбираю статус
+            SelectStatus(status); // Выбираю статус
             Thread.Sleep(1000);
             ConfirmOrder(); // Подтверждаю заказ
         }
@@ -105,9 +105,9 @@ namespace EABotToTheGame.Services.SiteServices
         }
 
         // Выбираю статус
-        public void SelectStatus()
+        public void SelectStatus(string status)
         {
-            string statusText = "START";
+            string statusText = status.Trim();
             try
             {
                 IWebElement dropdownToggle = _wait.Until(e => e.FindElement(By.CssSelector(".select__header.init-select")));

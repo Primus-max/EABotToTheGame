@@ -128,6 +128,20 @@ namespace EABotToTheGame.Services
 
                     bool isDownLoadedPage = eASportSiteService.WaitingDownLoadPage(); // Ожидание полной загрузки страницы
 
+                    // Если игрок онлайн 
+                    bool userIsSignedIntoAnotheDevice = eASportSiteService.IsSignedIntoAnotheDevice();
+                    // Если да,  то ставим статус Online  на Blazer и отправляем скрин
+                    if (userIsSignedIntoAnotheDevice) 
+                    {
+                        ScreenshotService screenshotService = new(_driver);
+                        string screenPath = screenshotService.CaptureAndCropScreenshot();
+
+                        tabManager.OpenOrSwitchTab(BlazeTrackUrl); // Переключаюсь на блейзера
+                        blazeTrack.ConfirmOrder(screenPath, "ONLINE"); // Отправляю скрин и статус
+                        string messageTextInfo = "Игрок онлайн, отправил крин и поставил статус";
+                        await SendMessage(botClient, userId, cancellationToken, messageTextInfo, screenPath);
+                    }
+
                     eASportSiteService.CloseFuckingPopup(); // Проверяю если открылся PopUp
                     await Task.Delay(500);
 
@@ -144,7 +158,7 @@ namespace EABotToTheGame.Services
                         if (currentAppMode == AppMode.AutoMode)
                         {
                             tabManager.OpenOrSwitchTab(BlazeTrackUrl); // Переключаюсь на блейзера
-                            blazeTrack.ConfirmOrder(screenPath); // Отправляю скрин и подтверждаю
+                            blazeTrack.ConfirmOrder(screenPath, "START"); // Отправляю скрин и статус
 
                             await SendMessage(botClient, userId, cancellationToken, succsessMessage, screenPath);
                         }

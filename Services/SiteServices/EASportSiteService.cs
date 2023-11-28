@@ -216,7 +216,7 @@ namespace EABotToTheGame.Services.SiteServices
         // Закрываю всплывшее окно
         public void CloseFuckingPopup()
         {
-            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(7));
+            WebDriverWait wait = new(_driver, TimeSpan.FromSeconds(10));
             try
             {
                 IWebElement popUp = wait.Until(e => e.FindElement(By.CssSelector("div.ut-livemessage")));
@@ -237,6 +237,23 @@ namespace EABotToTheGame.Services.SiteServices
             catch (Exception)
             {
                 // Обработка ошибки
+            }
+        }
+
+        // Проверка, что игрок онлайн
+        public bool IsSignedIntoAnotheDevice()
+        {
+            WebDriverWait wait = new(_driver, TimeSpan.FromSeconds(5));
+            try
+            {
+                IWebElement isSignedText = wait.Until(e => e.FindElement(By.TagName("H2")));
+                bool isSigned = isSignedText.Text.Contains("Signed Into Another Device");
+
+                return isSigned;
+            }
+            catch (Exception)
+            {
+                return false;
             }
         }
 
@@ -298,16 +315,15 @@ namespace EABotToTheGame.Services.SiteServices
             }
         }
 
-        // Проверка успешной авторизации для получени кода подтверждения
+        // Проверка успешной авторизации для получении кода подтверждения
         public bool IsAuth()
         {
             WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(5));
             try
             {
+                // Получаю родителя
                 IWebElement parentDiv = wait.Until(e => e.FindElement(By.Id("online-general-error")));
-
-                // Вы можете использовать parentDiv по вашему усмотрению
-                // Например, получить p элемент внутри parentDiv
+                // Получаю элемент с текстом
                 IWebElement pElement = parentDiv.FindElement(By.TagName("P"));
 
                 // Затем получить текст из p элемента
