@@ -41,8 +41,10 @@ namespace EABotToTheGame.Services
             TabManager tabManager = new TabManager(_driver); // Создаю конструктор менеджера вкладок  
             BlazeTrackService blazeTrack = null!;
 
+            AppMode currentAppMode = _appModeManager.GetCurrentAppMode(userId); // Получаю текущий мод работы
+
             // Если передали данные значит в ручном режиме
-            if (authData != null)
+            if (currentAppMode == AppMode.ManualMode)
             {
                 _authData = authData;
             }
@@ -149,9 +151,7 @@ namespace EABotToTheGame.Services
                     if (isDownLoadedPage)
                     {
                         ScreenshotService screenshotService = new(_driver);
-                        string screenPath = screenshotService.CaptureAndCropScreenshot();
-
-                        AppMode currentAppMode = _appModeManager.GetCurrentAppMode(userId); // Получаю текущий мод
+                        string screenPath = screenshotService.CaptureAndCropScreenshot();                        
 
                         string succsessMessage = "Авторизация успешно пройдена, скриншот отправил";
                         // В автомоде отправляю скрин на сайт и в телегу
