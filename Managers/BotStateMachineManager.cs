@@ -7,8 +7,7 @@ namespace EABotToTheGame.Managers
 
         private readonly ITelegramBotClient _botClient;
         private readonly IInlineKeyboardProvider _keyboardProvider;
-        private readonly AutoMode _autoMode;
-        private readonly ManualMode _manualMode;
+        private readonly SitesWorkerService _autoMode;
         private readonly AppModeManager _appModeManager;
         private readonly InlineKeyboardProviderFactory _inlineKeyboardProviderFactory;
         private readonly WhoIAmManager _whoIAmManager;
@@ -21,8 +20,7 @@ namespace EABotToTheGame.Managers
 
         public BotStateMachine(ITelegramBotClient botClient,
             IInlineKeyboardProvider keyboardProvider,
-            AutoMode autoMode,
-            ManualMode manualMode,
+            SitesWorkerService autoMode,
             AppModeManager appModeManager,
             InlineKeyboardProviderFactory inlineKeyboardProviderFactory,
             WhoIAmManager whoIAmManager,
@@ -35,7 +33,6 @@ namespace EABotToTheGame.Managers
             _botClient = botClient;
             _keyboardProvider = keyboardProvider;
             _autoMode = autoMode;
-            _manualMode = manualMode;
             _appModeManager = appModeManager;
             _inlineKeyboardProviderFactory = inlineKeyboardProviderFactory;
             _whoIAmManager = whoIAmManager;

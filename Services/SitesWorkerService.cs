@@ -2,7 +2,7 @@
 
 namespace EABotToTheGame.Services
 {
-    public class AutoMode : IBotMode
+    public class SitesWorkerService : IBotMode
     {
         private readonly string EASportUrl = "https://signin.ea.com/p/juno/login?execution=e921889951s1&initref=https%3A%2F%2Faccounts.ea.com%3A443%2Fconnect%2Fauth%3Fhide_create%3Dtrue%26display%3Dweb2%252Flogin%26scope%3Dbasic.identity%2Boffline%2Bsignin%2Bbasic.entitlement%2Bbasic.persona%26release_type%3Dprod%26response_type%3Dtoken%26redirect_uri%3Dhttps%253A%252F%252Fwww.ea.com%252Fea-sports-fc%252Fultimate-team%252Fweb-app%252Fauth.html%26accessToken%3D%26locale%3Den_US%26prompt%3Dlogin%26client_id%3DFC24_JS_WEB_APP";
         private readonly string BlazeTrackUrl = "https://blaze-track.com/site/orders?customer_id=1";
@@ -14,7 +14,7 @@ namespace EABotToTheGame.Services
         private readonly WhoIAmManager _whoIAmManager = null!;
         private readonly AppModeManager _appModeManager;
 
-        public AutoMode(UserStateManager userStateManager,
+        public SitesWorkerService(UserStateManager userStateManager,
             WebDriverManager webDriverManager,
             WhoIAmManager whoIAmManager,
             DataWaitService dataWaitService,
