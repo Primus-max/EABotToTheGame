@@ -67,8 +67,15 @@ namespace EABotToTheGame.Services
                 bool isAuth = false;
                 do
                 {
-                    isAuth = eASportSiteService.Authorizations(_authData.Email, _authData.Password); // Авторизуюсь                   
+                    // Возможно сначала нужно разлогиниться, чтобы залогиниться
+                    eASportSiteService.LogOut();
 
+                    // Подожду на всякий случай
+                    await Task.Delay(2000);
+
+                    // Авторизуюсь
+                    isAuth = eASportSiteService.Authorizations(_authData.Email, _authData.Password);                    
+                   
                     if (!isAuth)
                     {
                         // Если не авторизовался, отрпавляю сообщение и ставлю ожидание на новые данные
