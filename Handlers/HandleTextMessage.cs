@@ -41,7 +41,7 @@ namespace EABotToTheGame.Handlers
                 _botStateManager.SetNextState(nextState);
 
                 // Обнуляю состояния
-                _appModeManager.SetAppMode(userId, AppMode.Default);                
+                _appModeManager.SetAppMode(userId, AppMode.Default);
 
                 string message = "Выбери кем управлять";
                 await _messageService.SendMessageAsync(userId, message, nextState, cancellationToken);
@@ -77,6 +77,15 @@ namespace EABotToTheGame.Handlers
 
                 _dataWaitService.SetStringData(code);
             }
+
+            // Если ожидаю номера сервиса для отправки кода (на email, на телефон и т.п)
+            if (currentUserState == UserState.ExpectedIndexServiceCode)
+            {
+                int code = Convert.ToInt16(update?.Message?.Text); // Преобразую к Int, это ожидаемый тип данных
+
+                _dataWaitService.SetIndexData(code);
+            }
+
         }
     }
 }
