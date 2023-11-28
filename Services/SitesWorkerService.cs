@@ -146,11 +146,28 @@ namespace EABotToTheGame.Services
                         await SendMessage(botClient, userId, cancellationToken, messageTextInfo);
                     }
 
-                    bool isDownLoadedPage = eASportSiteService.WaitingDownLoadPage(); // Ожидание полной загрузки страницы                   
-
+                    bool isDownLoadedPage = eASportSiteService.WaitingDownLoadPage(); // Ожидание полной загрузки страницы  
 
                     eASportSiteService.CloseFuckingPopup(); // Проверяю если открылся PopUp
                     await Task.Delay(500);
+
+                    #region Проверка на блокировку пользователя
+                    // Открываю трансферы
+                    eASportSiteService.OpenTransfersList();
+                    // Если игрок заблокирован для трансферов
+                    bool isUserBlocked = eASportSiteService.IsUserBlockedTransfers();
+                    if (isUserBlocked)
+                    {
+                        // Информирую
+                        string userBlockedMessage = $"ЗАБЛОКИРОВАНЫ трансферы пользователя, работу остановил, можно работуть с другим аккаунтом";
+                        await SendMessage(botClient, userId, cancellationToken, userBlockedMessage);
+
+                        // Обнуляю мод, выходим
+                        _appModeManager.SetAppMode(userId, AppMode.Default); // Ставлю режим в неопределённый
+                        _userStateManager.SetUserState(userId, UserState.Start); // Возвращаю статус
+                        return;
+                    } 
+                    #endregion
 
                     // Если страница загрузилась, то отправляю правильный скрин в телегу и вставляю на сайт в поле
                     if (isDownLoadedPage)
@@ -177,6 +194,11 @@ namespace EABotToTheGame.Services
                         string screenPAth = screenshotService.CaptureAndCropScreenshot(true); // Делаю полный скрин
                         string wrongMessageText = $"Не удалось сделать скриншот, скорее всего страница не была загружена";
                         await SendMessage(botClient, userId, cancellationToken, wrongMessageText, screenPAth);
+
+                        // Обнуляем мод, выходим
+                        _appModeManager.SetAppMode(userId, AppMode.Default); // Ставлю режим в неопределённый
+                        _userStateManager.SetUserState(userId, UserState.Start); // Возвращаю статус
+                        return;
                     }
                 }
             }

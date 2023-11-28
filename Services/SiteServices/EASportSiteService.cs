@@ -335,6 +335,37 @@ namespace EABotToTheGame.Services.SiteServices
             }
         }
 
+        // Кликаю по трансферам
+        public void OpenTransfersList()
+        {
+            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(30));
+            try
+            {
+                IWebElement transfersButton = wait.Until(e => e.FindElement(By.CssSelector("button.ut-tab-bar-item.icon-transfer")));
+                Thread.Sleep(200);
+                transfersButton.Click();
+            }
+            catch (Exception)
+            {
+
+            }
+        }
+
+        // Проверка на блок аккаунта
+        public bool IsUserBlockedTransfers()
+        {
+            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(7));
+            try
+            {
+                IWebElement lockedElement = wait.Until(e => e.FindElement(By.CssSelector("div.ut-tile-dim-overlay-view.locked")));
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         // Проверка успешной авторизации для получении кода подтверждения
         public bool IsAuth()
         {
@@ -359,7 +390,5 @@ namespace EABotToTheGame.Services.SiteServices
                 return true;
             }
         }
-
-
     }
 }
