@@ -13,6 +13,8 @@ namespace EABotToTheGame.Services
         private readonly WebDriverManager _webDriverManager = null!;
         private readonly WhoIAmManager _whoIAmManager = null!;
         private readonly AppModeManager _appModeManager;
+        private BlazeTrackService blazeTrack = null!;
+        private EASportSiteService eASportSiteService = null!;
 
         public SitesWorkerService(UserStateManager userStateManager,
             WebDriverManager webDriverManager,
@@ -38,8 +40,7 @@ namespace EABotToTheGame.Services
 
             _driver = _webDriverManager.GetDriver(whoIAm); // Получаю драйвер для юзера
 
-            TabManager tabManager = new TabManager(_driver); // Создаю конструктор менеджера вкладок  
-            BlazeTrackService blazeTrack = null!;
+            TabManager tabManager = new TabManager(_driver); // Создаю конструктор менеджера вкладок             
 
             AppMode currentAppMode = _appModeManager.GetCurrentAppMode(userId); // Получаю текущий мод работы
 
@@ -58,7 +59,7 @@ namespace EABotToTheGame.Services
 
             await Task.Delay(2000);
 
-            EASportSiteService eASportSiteService = new(_driver); // Сервис работы с EASports
+            eASportSiteService = new(_driver); // Сервис работы с EASports
             tabManager.OpenOrSwitchTab(EASportUrl);// Переключаюсь на EASports
 
             if (_authData != null)
@@ -96,8 +97,10 @@ namespace EABotToTheGame.Services
                 } while (!isAuth);
                 #endregion
 
-                if (isAuth) // Если авторизовался запрашиваю код подтверждения
+                // Если авторизовался запрашиваю код подтверждения
+                if (isAuth)
                 {
+                    #region Выбор сервиса для отправки кода
                     bool isChecked = true; // Флаг для указания что это проверка наличия сервисов
                     int sendCodeServices = eASportSiteService.GetAllServicesForSendCode(isChecked); // Проверяю сколько сервисов доступно
                     if (sendCodeServices > 1)  // Если есть выбор, отправляю скрин и ожидаю цифру (индекс сервиса)
@@ -117,6 +120,7 @@ namespace EABotToTheGame.Services
 
                         _userStateManager.SetUserState(userId, UserState.Start); // Возвращаю статус
                     }
+                    #endregion
 
                     bool isCodeSended = eASportSiteService.SendCodeOnDefaultService(); // Нажимаю кнопку отправить код на почту, на вский случай проверяю операцию
 
@@ -124,7 +128,7 @@ namespace EABotToTheGame.Services
                     bool retry = false;
 
                     #region Проверка на правильно введённый и отправленный код подтверджения
-                    if (isCodeSended) // Если была кнопка отправить код, то выполняем этот код
+                    if (!isCodeSended) // Если была кнопка отправить код, то выполняем этот код
                     {
                         do
                         {
@@ -154,6 +158,14 @@ namespace EABotToTheGame.Services
                             }
 
                             isAuthCode = eASportSiteService.IsAuth();
+                            // Если с кодом что-то не так, возвращаюсь на экран с выбором сервиса отправки кода
+                            if (!isAuthCode)
+                            {
+                                _driver.Navigate().Back(); // Возаврщаюсь на экран с выбором сервисов
+                                await ChoiceServiceForSendCode(botClient, userId, cancellationToken, isChecked: true); // Выбарию сервис
+                                eASportSiteService.SendCodeOnDefaultService();
+                            }
+
                             retry = !isAuthCode; // Если isAuthCode равно false, устанавливаем retry в true
 
                         } while (!isAuthCode);
@@ -240,6 +252,30 @@ namespace EABotToTheGame.Services
             }
             tabManager.OpenOrSwitchTab(EASportUrl);
         }
+
+        // Выбор сервиса для отправки кода (почта, смс и т.п)
+        private async Task ChoiceServiceForSendCode(ITelegramBotClient botClient, long userId, CancellationToken cancellationToken, bool isChecked = false)
+        {
+            int sendCodeServices = eASportSiteService.GetAllServicesForSendCode(isChecked); // Проверяю сколько сервисов доступно
+            if (sendCodeServices > 1)  // Если есть выбор, отправляю скрин и ожидаю цифру (индекс сервиса)
+            {
+                // Отправляю скрин сервисов
+                ScreenshotService screenshotService = new(_driver);
+                string screenPAth = screenshotService.CaptureAndCropScreenshot(true); // Делаю полный скрин
+                string choiceServiceMessageText = $"Доступны сервисы для отправки кода, отправь порядковый номер для выбора";
+                await SendMessage(botClient, userId, cancellationToken, choiceServiceMessageText, screenPAth);
+
+                _userStateManager.SetUserState(userId, UserState.ExpectedIndexServiceCode); // Ставлю статус ожидания кода статус
+                                                                                            // Ожидаю номер сервиса для выбора
+                int indexCodeService = await _dataWaitService.WaitForIndexDataAsync();
+
+                // Выбираю сервис по индексу и на него отправляю код
+                eASportSiteService.GetAllServicesForSendCode(sendCodeServiceIndex: indexCodeService);
+
+                _userStateManager.SetUserState(userId, UserState.Start); // Возвращаю статус
+            }
+        }
+
 
         // Метод вставки текста в текстовые поля
         private static void ClearAndEnterText(IWebElement element, string text)
