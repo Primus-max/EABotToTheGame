@@ -76,6 +76,10 @@ namespace EABotToTheGame.Services
 
                     // Авторизуюсь
                     isAuth = eASportSiteService.Authorizations(_authData.Email, _authData.Password);
+                    // Проверяю на всякий случай, если вошёл без кода(были куки сохранены)
+                    bool isDownLoadedPage = eASportSiteService.WaitingDownLoadPage(30);
+                    if (isDownLoadedPage) 
+                        return; // Выходим если прошли
 
                     if (!isAuth)
                     {
@@ -133,17 +137,8 @@ namespace EABotToTheGame.Services
                         do
                         {
 
-                            if (retry)
-                            {
-                                string errorCodeMessage = "Что-то пошло не так, не удалось отправить код, делаю повторную отправку";
-                                await SendMessage(botClient, userId, cancellationToken, errorCodeMessage);
-                                eASportSiteService.ResendVareficationCode();
-                            }
-                            else
-                            {
-                                string codeTextMessageGet = "Отправь мне код авторизации";
-                                await SendMessage(botClient, userId, cancellationToken, codeTextMessageGet);
-                            }
+                            string codeTextMessageGet = "Отправь мне код авторизации";
+                            await SendMessage(botClient, userId, cancellationToken, codeTextMessageGet);
 
                             _userStateManager.SetUserState(userId, UserState.ExpectedCodeAuthorizations);
 
@@ -161,6 +156,10 @@ namespace EABotToTheGame.Services
                             // Если с кодом что-то не так, возвращаюсь на экран с выбором сервиса отправки кода
                             if (!isAuthCode)
                             {
+                                string errorCodeMessage = "Что-то пошло не так, не удалось отправить код, делаю повторную отправку";
+                                await SendMessage(botClient, userId, cancellationToken, errorCodeMessage);
+                                eASportSiteService.ResendVareficationCode();
+
                                 _driver.Navigate().Back(); // Возаврщаюсь на экран с выбором сервисов
                                 await ChoiceServiceForSendCode(botClient, userId, cancellationToken, isChecked: true); // Выбарию сервис
                                 eASportSiteService.SendCodeOnDefaultService();
@@ -192,7 +191,7 @@ namespace EABotToTheGame.Services
                     }
                     #endregion
 
-                    bool isDownLoadedPage = eASportSiteService.WaitingDownLoadPage(); // Ожидание полной загрузки страницы  
+                    bool isDownLoadedPage = eASportSiteService.WaitingDownLoadPage(500); // Ожидание полной загрузки страницы  
 
                     eASportSiteService.CloseFuckingPopup(); // Проверяю если открылся PopUp
                     await Task.Delay(500);

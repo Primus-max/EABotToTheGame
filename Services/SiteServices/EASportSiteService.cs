@@ -225,9 +225,9 @@ namespace EABotToTheGame.Services.SiteServices
 
 
         // Метод ожидания загрузки страницы после того как отправили код и авторизовались
-        public bool WaitingDownLoadPage()
+        public bool WaitingDownLoadPage(int secondWait)
         {
-            WebDriverWait wait = new(_driver, TimeSpan.FromSeconds(500));
+            WebDriverWait wait = new(_driver, TimeSpan.FromSeconds(secondWait));
             try
             {
                 IWebElement navBarCurrency = wait.Until(e => e.FindElement(By.CssSelector("div.view-navbar-currency")));
@@ -239,6 +239,8 @@ namespace EABotToTheGame.Services.SiteServices
                 return false;
             }
         }
+
+        // 
 
         // Закрываю всплывшее окно
         public void CloseFuckingPopup()
