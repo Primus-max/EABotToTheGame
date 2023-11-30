@@ -78,7 +78,7 @@ namespace EABotToTheGame.Services
                     isAuth = eASportSiteService.Authorizations(_authData.Email, _authData.Password);
                     // Проверяю на всякий случай, если вошёл без кода(были куки сохранены)
                     bool isDownLoadedPage = eASportSiteService.WaitingDownLoadPage(30);
-                    if (isDownLoadedPage) 
+                    if (isDownLoadedPage)
                         return; // Выходим если прошли
 
                     if (!isAuth)
@@ -106,63 +106,74 @@ namespace EABotToTheGame.Services
                 {
                     #region Выбор сервиса для отправки кода
                     bool isChecked = true; // Флаг для указания что это проверка наличия сервисов
+                    bool isCodeSended = false; // Проверка был отправлен код или нет
                     int sendCodeServices = eASportSiteService.GetAllServicesForSendCode(isChecked); // Проверяю сколько сервисов доступно
                     if (sendCodeServices > 1)  // Если есть выбор, отправляю скрин и ожидаю цифру (индекс сервиса)
                     {
                         // Отправляю скрин сервисов
-                        ScreenshotService screenshotService = new(_driver);
-                        string screenPAth = screenshotService.CaptureAndCropScreenshot(true); // Делаю полный скрин
-                        string choiceServiceMessageText = $"Доступны сервисы для отправки кода, отправь порядковый номер для выбора";
-                        await SendMessage(botClient, userId, cancellationToken, choiceServiceMessageText, screenPAth);
-
-                        _userStateManager.SetUserState(userId, UserState.ExpectedIndexServiceCode); // Ставлю статус ожидания кода статус
-                        // Ожидаю номер сервиса для выбора
-                        int indexCodeService = await _dataWaitService.WaitForIndexDataAsync();
-
-                        // Выбираю сервис по индексу и на него отправляю код
-                        eASportSiteService.GetAllServicesForSendCode(sendCodeServiceIndex: indexCodeService);
-
-                        _userStateManager.SetUserState(userId, UserState.Start); // Возвращаю статус
+                        await ChoiceServiceForSendCode(botClient, userId, cancellationToken, isChecked: true); // Выбарию сервис
+                    }
+                    else
+                    {
+                        // Иначе жму то что есть
+                        isCodeSended = eASportSiteService.SendCodeOnDefaultService();
                     }
                     #endregion
 
-                    bool isCodeSended = eASportSiteService.SendCodeOnDefaultService(); // Нажимаю кнопку отправить код на почту, на вский случай проверяю операцию
-
                     bool isAuthCode = false;
                     bool retry = false;
-
+                    string codeAuthorization= string.Empty;
                     #region Проверка на правильно введённый и отправленный код подтверджения
                     if (!isCodeSended) // Если была кнопка отправить код, то выполняем этот код
                     {
                         do
                         {
-
-                            string codeTextMessageGet = "Отправь мне код авторизации";
-                            await SendMessage(botClient, userId, cancellationToken, codeTextMessageGet);
-
-                            _userStateManager.SetUserState(userId, UserState.ExpectedCodeAuthorizations);
-
-                            string codeAuthorization = await _dataWaitService.WaitForStringDataAsync();
-
-                            string successCodeTest = "Код получил, продолжаю работу";
-                            await SendMessage(botClient, userId, cancellationToken, successCodeTest);
-
-                            if (!string.IsNullOrEmpty(codeAuthorization))
+                            if (!retry) // Если первая иттерация
                             {
-                                eASportSiteService.SubmitCodeAuthorizations(codeAuthorization);
-                            }
+                                string codeTextMessageGet = "Отправь мне код авторизации";
+                                await SendMessage(botClient, userId, cancellationToken, codeTextMessageGet);
 
-                            isAuthCode = eASportSiteService.IsAuth();
+                                _userStateManager.SetUserState(userId, UserState.ExpectedCodeAuthorizations);
+
+                                codeAuthorization = await _dataWaitService.WaitForStringDataAsync();
+
+                                string successCodeTest = "Код получил, продолжаю работу";
+                                await SendMessage(botClient, userId, cancellationToken, successCodeTest);
+
+                                if (!string.IsNullOrEmpty(codeAuthorization))
+                                {
+                                    isAuthCode = eASportSiteService.SubmitCodeAuthorizations(codeAuthorization);
+                                }
+
+                                _userStateManager.SetUserState(userId, UserState.Start);
+                            }                                                        
+                            
                             // Если с кодом что-то не так, возвращаюсь на экран с выбором сервиса отправки кода
                             if (!isAuthCode)
                             {
-                                string errorCodeMessage = "Что-то пошло не так, не удалось отправить код, делаю повторную отправку";
+                                string errorCodeMessage = "Что-то пошло не так, не удалось отправить код, выбери сервис для отправки кода";
                                 await SendMessage(botClient, userId, cancellationToken, errorCodeMessage);
-                                eASportSiteService.ResendVareficationCode();
+                                //eASportSiteService.ResendVareficationCode();
 
+                                await Task.Delay(500);
                                 _driver.Navigate().Back(); // Возаврщаюсь на экран с выбором сервисов
                                 await ChoiceServiceForSendCode(botClient, userId, cancellationToken, isChecked: true); // Выбарию сервис
-                                eASportSiteService.SendCodeOnDefaultService();
+
+                                string codeTextMessageGet = "Отправь мне новый код авторизации";
+                                await SendMessage(botClient, userId, cancellationToken, codeTextMessageGet);
+                                _userStateManager.SetUserState(userId, UserState.ExpectedCodeAuthorizations);
+
+                                codeAuthorization = await _dataWaitService.WaitForStringDataAsync();
+
+                                string successCodeTest = "Код получил, продолжаю работу";
+                                await SendMessage(botClient, userId, cancellationToken, successCodeTest);
+
+                                if (!string.IsNullOrEmpty(codeAuthorization))
+                                {
+                                    isAuthCode = eASportSiteService.SubmitCodeAuthorizations(codeAuthorization);
+                                }
+
+                                _userStateManager.SetUserState(userId, UserState.Start);
                             }
 
                             retry = !isAuthCode; // Если isAuthCode равно false, устанавливаем retry в true
@@ -270,6 +281,8 @@ namespace EABotToTheGame.Services
 
                 // Выбираю сервис по индексу и на него отправляю код
                 eASportSiteService.GetAllServicesForSendCode(sendCodeServiceIndex: indexCodeService);
+
+                eASportSiteService.SendCodeOnDefaultService(); // Кликаем отправить код
 
                 _userStateManager.SetUserState(userId, UserState.Start); // Возвращаю статус
             }
