@@ -71,7 +71,8 @@ namespace EABotToTheGame.Services.SiteServices
             SetCodeToInput(code); // Вставляю код
             SubmitCode(); // Отправляю код
 
-            return IsInvalidSecurityCodeMessagePresent();
+            Thread.Sleep(2000);
+            return IsAuth();
         }
 
         // Вставляю email  в поле
@@ -114,18 +115,7 @@ namespace EABotToTheGame.Services.SiteServices
                 IWebElement formElement = _wait.Until(e => e.FindElement(By.Id("logInBtn")));
                 Thread.Sleep(1500);
 
-                formElement.Click();
-                //// Попробуйте использовать метод Submit()
-                //try
-                //{
-                //    formElement.Submit();
-                //}
-                //catch (Exception)
-                //{
-                //    // Если Submit() не сработал, используйте JavaScript для нажатия кнопки
-                //    IJavaScriptExecutor jsExecutor = (IJavaScriptExecutor)_driver;
-                //    jsExecutor.ExecuteScript("arguments[0].click();", formElement);
-                //}
+                formElement.Click();               
             }
             catch (Exception ex)
             {
@@ -140,19 +130,12 @@ namespace EABotToTheGame.Services.SiteServices
         {
             try
             {
-                IWebElement setCodeInput = _wait.Until(e => e.FindElement(By.Id("twoFactorCode")));
-
-                // Очищаем поле ввода
-                //IJavaScriptExecutor executor = (IJavaScriptExecutor)_driver;
-                //executor.ExecuteScript("arguments[0].value = '';", setCodeInput);
+                IWebElement setCodeInput = _wait.Until(e => e.FindElement(By.Id("twoFactorCode")));               
 
                 ClearAndEnterText(setCodeInput, code);
 
                 // Задержка, если это необходимо
                 Thread.Sleep(1000);
-
-                // Вводим текст
-                // executor.ExecuteScript($"arguments[0].value = '{code.Trim()}';", setCodeInput);
             }
             catch (Exception)
             {
@@ -203,25 +186,7 @@ namespace EABotToTheGame.Services.SiteServices
             {
                 return 0;
             }
-        }
-
-        // Проверяю подошёл код или нет
-        private bool IsInvalidSecurityCodeMessagePresent()
-        {
-            try
-            {
-                // Найти элемент по тексту
-                IWebElement errorElement = _wait.Until(e => e.FindElement(By.XPath("//p[@class='otkc otkinput-errormsg' and contains(text(), 'The security code you entered is invalid')]")));
-
-                // Проверить наличие элемента
-                return errorElement != null;
-            }
-            catch (Exception)
-            {
-                // Если элемент не найден, вернуть false
-                return false;
-            }
-        }
+        }    
 
 
         // Метод ожидания загрузки страницы после того как отправили код и авторизовались
@@ -398,7 +363,7 @@ namespace EABotToTheGame.Services.SiteServices
         // Нажать кнопку разлогиниться
         public void LogOut()
         {
-            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
+            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(5));
 
             try
             {
@@ -415,7 +380,7 @@ namespace EABotToTheGame.Services.SiteServices
         // Проверка успешной авторизации для получении кода подтверждения
         public bool IsAuth()
         {
-            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(5));
+            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
             try
             {
                 // Получаю родителя
@@ -429,6 +394,7 @@ namespace EABotToTheGame.Services.SiteServices
                                    || authErrorText.Contains("The security code you entered is invalid");
                 if (isWrongText)
                     return false;
+
                 return true;
             }
             catch (Exception)
